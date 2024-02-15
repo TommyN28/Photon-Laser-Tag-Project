@@ -2,11 +2,23 @@ import tkinter as tk
 from tkinter import messagebox
 import supabase
 
+
 class PlayerEntry:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Player Entry Screen")
         self.window.configure(bg='grey')
+        width = 1000
+        height = 700
+
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x_coordinate = (screen_width / 2) - (width / 2)
+        y_coordinate = (screen_height / 2) - (height / 2)
+
+        # Adjust where it pops up
+        self.window.geometry("%dx%d+%d+%d" %
+                           (width, height, x_coordinate, y_coordinate))
 
         # Add empty rows for spacing at the top
         for i in range(2):
@@ -102,6 +114,18 @@ class PlayerEntry:
 
     def handle_add_player(self):
         self.new_popup = tk.Toplevel()
+        width = 300
+        height = 240
+        screen_width = self.new_popup.winfo_screenwidth()
+        screen_height = self.new_popup.winfo_screenheight()
+        x_coordinate = (screen_width / 2) - (width / 2)
+        y_coordinate = (screen_height / 2) - (height / 2)
+
+
+        # Adjust where it pops up
+        self.new_popup.geometry("%dx%d+%d+%d" %
+                             (width, height, x_coordinate, y_coordinate))
+
         self.new_popup.title("Add Player")
 
         tk.Label(self.new_popup, text="Player Name:").grid(row=0, column=0, padx=10, pady=5)
