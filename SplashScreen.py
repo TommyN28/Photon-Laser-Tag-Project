@@ -3,11 +3,6 @@ from tkinter import *
 #from csce3513_project.Page import Page
 from PIL import Image, ImageTk
 
-# Calls the main screen to be shown
-# def run_page():
-#     return Page()
-
-
 class Splash:
 
     def __init__(self) -> None:
@@ -41,5 +36,3 @@ class Splash:
 
         self.root.after(3000, lambda: self.root.destroy())
         mainloop()
-
-screen = Splash()
