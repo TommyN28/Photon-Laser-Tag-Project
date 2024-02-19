@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
+from player_udp import player_udp
 import supabase
 
 class PlayerEntry:
     def __init__(self):
         self.window = tk.Tk()
+        self.udp_manager = player_udp()
         self.window.title("Player Entry Screen")
         self.window.configure(bg='grey')
 
@@ -84,6 +86,9 @@ class PlayerEntry:
         # Update the dictionary with the player's information
         self.green_names[name] = player_id
 
+        # Broadcast the equipment ID
+        self.udp_manager.broadcast_equipment_id(equipment_id)
+
     def add_red_player(self, name, player_id):
         row_index = len(self.red_names) + 1
 
@@ -111,6 +116,10 @@ class PlayerEntry:
 
         # Update the dictionary with the player's information
         self.red_names[name] = player_id
+
+        # Broadcast the equipment ID
+        self.udp_manager.broadcast_equipment_id(equipment_id)
+
 
 
     def add_default_rows(self, table, team, num_rows):
