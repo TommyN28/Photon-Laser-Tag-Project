@@ -22,3 +22,4 @@ Since a database library is also being used the user will need to install the li
 The main file for this project is called main.py, and it needs to be ran using python3. In case there are some errors due to missing imports with tkinker additional commands need to be run to install the missing packages.
 --sudo apt-get install python3-tk
 --sudo apt-get install python3-pil python3-pil.imagetk
+Then the user using the command python3 main.py should execute the code.
