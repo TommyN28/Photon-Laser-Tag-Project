@@ -62,35 +62,42 @@ class PlayerEntry:
 
     def add_default_rows(self, table, team, num_rows):
 
-        tk.Label(table, text="  ", bg='olivedrab' if team == 'Green' else 'maroon').grid(row=0, column=0, padx=5, pady=5, sticky='nw')
+        # Determine the background and font color based on the team
+        bg_color = 'olivedrab' if team == 'Green' else 'maroon'
+        fg_color = 'white' if team == 'Green' else 'white'  # Font color is white for both teams
+
+        tk.Label(table, text="  ", bg=bg_color, fg=fg_color).grid(row=0, column=0, padx=5, pady=5, sticky='nw')
 
         # Label for "ID" in the first row, first column
-        id_label = tk.Label(table, text="ID", bg='olivedrab' if team == 'Green' else 'maroon')
+        id_label = tk.Label(table, text="ID", bg=bg_color, fg=fg_color)
         id_label.grid(row=0, column=1, padx=5, pady=5, sticky='nw')
 
         # Label for "Player" in the first row, second column
-        player_label = tk.Label(table, text="Username", bg='olivedrab' if team == 'Green' else 'maroon')
+        player_label = tk.Label(table, text="Username", bg=bg_color, fg=fg_color)
         player_label.grid(row=0, column=2, padx=5, pady=5, sticky='nw')
 
         # Label for "Equipment ID" in the first row, fourth column
-        equipment_label = tk.Label(table, text="Equipment ID", bg='olivedrab' if team == 'Green' else 'maroon')
+        equipment_label = tk.Label(table, text="Equipment ID", bg=bg_color, fg=fg_color)
         equipment_label.grid(row=0, column=3, padx=5, pady=5, sticky='nw')
 
-        for i in range(num_rows):
 
-            tk.Label(table, text=f'Player  {i+1}', bg='olivedrab' if team == 'Green' else 'maroon').grid(row=i+1, column=0, padx=5, pady=5, sticky='nw')
+        for i in range(num_rows):
+            tk.Label(table, text=f'Player  {i+1}', bg='olivedrab' if team == 'Green' else 'maroon', fg='white').grid(row=i+1, column=0, padx=5, pady=5, sticky='nw')
 
             # Label for player ID
-            id_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            id_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             id_label.grid(row=i+1, column=1, padx=5, pady=5, sticky='w')
 
             # Label for player name
-            name_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            name_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             name_label.grid(row=i+1, column=2, padx=5, pady=5, sticky='w')
 
             # Label for equipment ID
-            equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
+
+
+
 
     def add_green_player(self, name, player_id):
         row_index = len(self.green_names) + 1
@@ -102,19 +109,19 @@ class PlayerEntry:
         equipment_id = self.green_equipment_id_counter
 
         # Label for player ID
-        id_label = tk.Label(self.green_table, text=f"{player_id}", bg='olivedrab')
+        id_label = tk.Label(self.green_table, text=f"{player_id}", bg='olivedrab', fg='white')
         id_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
 
         # Label for player name
-        name_label = tk.Label(self.green_table, text=f"{name}", bg='olivedrab')
+        name_label = tk.Label(self.green_table, text=f"{name}", bg='olivedrab', fg='white')
         name_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
 
         # Label for equipment ID
-        equipment_label = tk.Label(self.green_table, text=f"{equipment_id}", bg='olivedrab')
+        equipment_label = tk.Label(self.green_table, text=f"{equipment_id}", bg='olivedrab', fg='white')
         equipment_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
 
         # Label for score
-        score_label = tk.Label(self.green_table, text="", bg='olivedrab')
+        score_label = tk.Label(self.green_table, text="", bg='olivedrab', fg='white')
         score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
         # Update the dictionary with the player's information
@@ -134,19 +141,19 @@ class PlayerEntry:
         equipment_id = self.red_equipment_id_counter
 
         # Label for player ID
-        id_label = tk.Label(self.red_table, text=f"{player_id}", bg='maroon')
+        id_label = tk.Label(self.red_table, text=f"{player_id}", bg='maroon', fg='white')
         id_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
 
         # Label for player name
-        name_label = tk.Label(self.red_table, text=f"{name}", bg='maroon')
+        name_label = tk.Label(self.red_table, text=f"{name}", bg='maroon', fg='white')
         name_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
 
         # Label for equipment ID
-        equipment_label = tk.Label(self.red_table, text=f"{equipment_id}", bg='maroon')
+        equipment_label = tk.Label(self.red_table, text=f"{equipment_id}", bg='maroon', fg='white')
         equipment_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
 
         # Label for score
-        score_label = tk.Label(self.red_table, text="", bg='maroon')
+        score_label = tk.Label(self.red_table, text="", bg='maroon', fg='white')
         score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
         # Update the dictionary with the player's information
