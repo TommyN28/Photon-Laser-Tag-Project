@@ -22,7 +22,7 @@ class PlayerEntry:
         title.grid(row=0, column=0, columnspan=4)
 
         # Frame to hold the title and tables
-        frame = tk.Frame(self.window, bg='grey')
+        frame = tk.Frame(self.window, bg='lightgrey')
         frame.grid(row=1, column=0, columnspan=4)
 
         greenTitle = tk.Label(frame, text="Green Team", bg='olivedrab', fg='white', font=("Quantum", 24, "bold"))
@@ -48,8 +48,9 @@ class PlayerEntry:
         self.add_default_rows(self.green_table, 'Green', 15)
         self.add_default_rows(self.red_table, 'Red', 15)
 
-        self.add_player_button = tk.Button(self.window, text="Add Player", command=self.handle_add_player)
-        self.add_player_button.grid(row=2, columnspan=4, padx=10, pady=10)
+        # Create Buttons
+        tk.Button(self.window, text="Add New Player", command=self.handle_add_new_player_popup, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0).grid(row=2, columnspan=4, padx=10, pady=5)
+        tk.Button(self.window, text="Add Existing Player", command=self.handle_add_existing_player, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0).grid(row=3, columnspan=4, padx=10, pady=5)
 
         # Supabase connection
         self.supabase_url = 'https://xsqxdgtmmlfjubodeinc.supabase.co'
@@ -57,6 +58,39 @@ class PlayerEntry:
         self.client = supabase.create_client(self.supabase_url, self.supabase_key)
 
         self.window.mainloop()
+
+
+    def add_default_rows(self, table, team, num_rows):
+
+        tk.Label(table, text="  ", bg='olivedrab' if team == 'Green' else 'maroon').grid(row=0, column=0, padx=5, pady=5, sticky='nw')
+
+        # Label for "ID" in the first row, first column
+        id_label = tk.Label(table, text="ID", bg='olivedrab' if team == 'Green' else 'maroon')
+        id_label.grid(row=0, column=1, padx=5, pady=5, sticky='nw')
+
+        # Label for "Player" in the first row, second column
+        player_label = tk.Label(table, text="Username", bg='olivedrab' if team == 'Green' else 'maroon')
+        player_label.grid(row=0, column=2, padx=5, pady=5, sticky='nw')
+
+        # Label for "Equipment ID" in the first row, fourth column
+        equipment_label = tk.Label(table, text="Equipment ID", bg='olivedrab' if team == 'Green' else 'maroon')
+        equipment_label.grid(row=0, column=3, padx=5, pady=5, sticky='nw')
+
+        for i in range(num_rows):
+
+            tk.Label(table, text=f'Player  {i+1}', bg='olivedrab' if team == 'Green' else 'maroon').grid(row=i+1, column=0, padx=5, pady=5, sticky='nw')
+
+            # Label for player ID
+            id_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            id_label.grid(row=i+1, column=1, padx=5, pady=5, sticky='w')
+
+            # Label for player name
+            name_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            name_label.grid(row=i+1, column=2, padx=5, pady=5, sticky='w')
+
+            # Label for equipment ID
+            equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
+            equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
 
     def add_green_player(self, name, player_id):
         row_index = len(self.green_names) + 1
@@ -69,25 +103,26 @@ class PlayerEntry:
 
         # Label for player ID
         id_label = tk.Label(self.green_table, text=f"{player_id}", bg='olivedrab')
-        id_label.grid(row=row_index, column=0, padx=5, pady=5, sticky='w')
+        id_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
 
         # Label for player name
-        name_label = tk.Label(self.green_table, text=f"Player {row_index}: {name}", bg='olivedrab')
-        name_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
+        name_label = tk.Label(self.green_table, text=f"{name}", bg='olivedrab')
+        name_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
 
         # Label for equipment ID
         equipment_label = tk.Label(self.green_table, text=f"{equipment_id}", bg='olivedrab')
-        equipment_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
+        equipment_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
 
         # Label for score
         score_label = tk.Label(self.green_table, text="", bg='olivedrab')
-        score_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
+        score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
         # Update the dictionary with the player's information
         self.green_names[name] = player_id
 
         # Broadcast the equipment ID
         self.udp_manager.broadcast_equipment_id(equipment_id)
+
 
     def add_red_player(self, name, player_id):
         row_index = len(self.red_names) + 1
@@ -100,19 +135,19 @@ class PlayerEntry:
 
         # Label for player ID
         id_label = tk.Label(self.red_table, text=f"{player_id}", bg='maroon')
-        id_label.grid(row=row_index, column=0, padx=5, pady=5, sticky='w')
+        id_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
 
         # Label for player name
-        name_label = tk.Label(self.red_table, text=f"Player {row_index}: {name}", bg='maroon')
-        name_label.grid(row=row_index, column=1, padx=5, pady=5, sticky='w')
+        name_label = tk.Label(self.red_table, text=f"{name}", bg='maroon')
+        name_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
 
         # Label for equipment ID
         equipment_label = tk.Label(self.red_table, text=f"{equipment_id}", bg='maroon')
-        equipment_label.grid(row=row_index, column=2, padx=5, pady=5, sticky='w')
+        equipment_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
 
         # Label for score
         score_label = tk.Label(self.red_table, text="", bg='maroon')
-        score_label.grid(row=row_index, column=3, padx=5, pady=5, sticky='w')
+        score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
         # Update the dictionary with the player's information
         self.red_names[name] = player_id
@@ -120,43 +155,8 @@ class PlayerEntry:
         # Broadcast the equipment ID
         self.udp_manager.broadcast_equipment_id(equipment_id)
 
-
-
-    def add_default_rows(self, table, team, num_rows):
-        # Label for "ID" in the first row, first column
-        id_label = tk.Label(table, text="ID", bg='olivedrab' if team == 'Green' else 'maroon')
-        id_label.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
-
-        # Label for "Player" in the first row, second column
-        player_label = tk.Label(table, text="Player:", bg='olivedrab' if team == 'Green' else 'maroon')
-        player_label.grid(row=0, column=1, padx=5, pady=5, sticky='nw')
-
-        # Label for "Equipment ID" in the first row, fourth column
-        equipment_label = tk.Label(table, text="Equipment ID:", bg='olivedrab' if team == 'Green' else 'maroon')
-        equipment_label.grid(row=0, column=2, padx=5, pady=5, sticky='nw')
-
-        for i in range(num_rows):
-            # Label for player ID
-            id_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
-            id_label.grid(row=i+1, column=0, padx=5, pady=5, sticky='w')
-
-            # Label for player name
-            name_label = tk.Label(table, text=f'Player {i+1}', bg='olivedrab' if team == 'Green' else 'maroon')
-            name_label.grid(row=i+1, column=1, padx=5, pady=5, sticky='w')
-
-            # Label for equipment ID
-            equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon')
-            equipment_label.grid(row=i+1, column=2, padx=5, pady=5, sticky='w')
-
-    def handle_add_player(self):
-        self.new_popup = tk.Toplevel()
-        self.new_popup.title("Add Player")
-
-        tk.Button(self.new_popup, text="Add New Player", command=self.handle_add_new_player_popup).grid(row=0, column=0, padx=10, pady=5)
-        tk.Button(self.new_popup, text="Add Existing Player", command=self.handle_add_existing_player).grid(row=0, column=1, padx=10, pady=5)
-
     def handle_add_new_player_popup(self):
-        self.new_popup.destroy()  # Close the current popup
+        # self.new_popup.destroy()  # Close the current popup
         self.new_player_popup = tk.Toplevel()
         self.new_player_popup.title("Add New Player")
 
@@ -196,7 +196,7 @@ class PlayerEntry:
             self.new_player_popup.destroy()  # Close the new player popup
 
     def handle_add_existing_player(self):
-        self.new_popup.destroy()  # Close the current popup
+        # self.new_popup.destroy()  # Close the current popup
         self.existing_popup = tk.Toplevel()
         self.existing_popup.title("Add Existing Player")
 
