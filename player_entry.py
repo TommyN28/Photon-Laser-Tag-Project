@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from player_udp import player_udp
 import supabase
+from playerAction import PlayerAction
 
 class PlayerEntry:
     def __init__(self):
@@ -57,7 +58,42 @@ class PlayerEntry:
         self.supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXhkZ3RtbWxmanVib2RlaW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc0MjI4MjYsImV4cCI6MjAyMjk5ODgyNn0.tDnhgypAgUx4XL1pN9KLvQqY4QjfxjRZYD0VDX845cI'
         self.client = supabase.create_client(self.supabase_url, self.supabase_key)
 
+        # Bind F5 key to start the game
+        self.window.bind("<F5>", self.start_game)
+        self.window.bind("<F12>", self.clear_all_entries)
         self.window.mainloop()
+
+    def start_game(self, event):
+        self.window.destroy()
+
+        game_window = PlayerAction()
+
+    def clear_all_entries(self, event):
+        # Clear all player entries
+        self.clear_entries(self.green_table)
+        self.clear_entries(self.red_table)
+
+    def clear_entries(self, table):
+        # Clear all widgets in the green team table
+        for widget in self.green_table.winfo_children():
+            widget.destroy()
+        # Clear all widgets in the red team table
+        for widget in self.red_table.winfo_children():
+            widget.destroy()
+
+        # Reset dictionaries
+        self.green_names = {}
+        self.green_ids = {}
+        self.red_names = {}
+        self.red_ids = {}
+
+        # Reset equipment ID counters
+        self.green_equipment_id_counter = 0
+        self.red_equipment_id_counter = 10
+
+        # Add default rows again
+        self.add_default_rows(self.green_table, 'Green', 15)
+        self.add_default_rows(self.red_table, 'Red', 15)
 
 
     def add_default_rows(self, table, team, num_rows):
@@ -80,6 +116,8 @@ class PlayerEntry:
         equipment_label = tk.Label(table, text="Equipment ID", bg=bg_color, fg=fg_color)
         equipment_label.grid(row=0, column=3, padx=5, pady=5, sticky='nw')
 
+        tk.Label(self.window, text="Press F5 to start the game", bg='grey', fg='white', font=("Helvetica", 14)).grid(row=4, column=0, columnspan=4, padx=10, pady=(0, 5))
+        tk.Label(self.window, text="Press F12 to clear the table", bg='grey', fg='white', font=("Helvetica", 14)).grid(row=5, column=0, columnspan=4, padx=10, pady=(0, 10))
 
         for i in range(num_rows):
             tk.Label(table, text=f'Player  {i+1}', bg='olivedrab' if team == 'Green' else 'maroon', fg='white').grid(row=i+1, column=0, padx=5, pady=5, sticky='nw')
@@ -95,9 +133,6 @@ class PlayerEntry:
             # Label for equipment ID
             equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
-
-
-
 
     def add_green_player(self, name, player_id):
         row_index = len(self.green_names) + 1
@@ -187,7 +222,6 @@ class PlayerEntry:
 
         # Confirm Button
         tk.Button(self.new_player_popup, text="Confirm", command=self.check_and_add_new_player).grid(row=3, columnspan=2, padx=10, pady=10)
-
 
     def check_and_add_new_player(self):
         player_id = self.new_player_id.get()
