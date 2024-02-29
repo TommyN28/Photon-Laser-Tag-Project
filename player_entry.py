@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from player_udp import player_udp
 import supabase
+from playerAction import PlayerAction
 
 class PlayerEntry:
     def __init__(self):
@@ -57,7 +58,42 @@ class PlayerEntry:
         self.supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzcXhkZ3RtbWxmanVib2RlaW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDc0MjI4MjYsImV4cCI6MjAyMjk5ODgyNn0.tDnhgypAgUx4XL1pN9KLvQqY4QjfxjRZYD0VDX845cI'
         self.client = supabase.create_client(self.supabase_url, self.supabase_key)
 
+        # Bind F5 key to start the game
+        self.window.bind("<F5>", self.start_game)
+        self.window.bind("<F12>", self.clear_all_entries)
         self.window.mainloop()
+
+    def start_game(self, event):
+        self.window.destroy()
+
+        game_window = PlayerAction()
+
+    def clear_all_entries(self, event):
+        # Clear all player entries
+        self.clear_entries(self.green_table)
+        self.clear_entries(self.red_table)
+
+    def clear_entries(self, table):
+        # Clear all widgets in the green team table
+        for widget in self.green_table.winfo_children():
+            widget.destroy()
+        # Clear all widgets in the red team table
+        for widget in self.red_table.winfo_children():
+            widget.destroy()
+
+        # Reset dictionaries
+        self.green_names = {}
+        self.green_ids = {}
+        self.red_names = {}
+        self.red_ids = {}
+
+        # Reset equipment ID counters
+        self.green_equipment_id_counter = 0
+        self.red_equipment_id_counter = 10
+
+        # Add default rows again
+        self.add_default_rows(self.green_table, 'Green', 15)
+        self.add_default_rows(self.red_table, 'Red', 15)
 
 
     def add_default_rows(self, table, team, num_rows):
@@ -95,9 +131,6 @@ class PlayerEntry:
             # Label for equipment ID
             equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
-
-
-
 
     def add_green_player(self, name, player_id):
         row_index = len(self.green_names) + 1
