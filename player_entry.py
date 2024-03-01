@@ -116,6 +116,8 @@ class PlayerEntry:
         equipment_label = tk.Label(table, text="Equipment ID", bg=bg_color, fg=fg_color)
         equipment_label.grid(row=0, column=3, padx=5, pady=5, sticky='nw')
 
+        tk.Label(self.window, text="Press F5 to start the game", bg='grey', fg='white', font=("Helvetica", 14)).grid(row=4, column=0, columnspan=4, padx=10, pady=(0, 5))
+        tk.Label(self.window, text="Press F12 to clear the table", bg='grey', fg='white', font=("Helvetica", 14)).grid(row=5, column=0, columnspan=4, padx=10, pady=(0, 10))
 
         for i in range(num_rows):
             tk.Label(table, text=f'Player  {i+1}', bg='olivedrab' if team == 'Green' else 'maroon', fg='white').grid(row=i+1, column=0, padx=5, pady=5, sticky='nw')
@@ -220,7 +222,6 @@ class PlayerEntry:
 
         # Confirm Button
         tk.Button(self.new_player_popup, text="Confirm", command=self.check_and_add_new_player).grid(row=3, columnspan=2, padx=10, pady=10)
-
 
     def check_and_add_new_player(self):
         player_id = self.new_player_id.get()
