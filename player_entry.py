@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from player_udp import player_udp
 import supabase
-from playerAction import PlayerAction
+from play_action import playAction
 
 class PlayerEntry:
     def __init__(self):
@@ -66,7 +66,7 @@ class PlayerEntry:
     def start_game(self, event):
         self.window.destroy()
 
-        game_window = PlayerAction()
+        game_window = playAction(self.green_names, self.red_names)
 
     def clear_all_entries(self, event):
         # Clear all player entries
@@ -289,4 +289,3 @@ class PlayerEntry:
             return player_info['Name'], player_info['Team']
         else:
             messagebox.showerror("Error", "Player not found in database.")
-
