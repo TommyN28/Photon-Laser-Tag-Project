@@ -63,9 +63,29 @@ class PlayerEntry:
         self.window.bind("<F12>", self.clear_all_entries)
         self.window.mainloop()
 
+    # Destroys the player entry screen after 30 seconds and creates the player action screen
     def start_game(self, event):
-        self.window.destroy()
+        self.time_remaining = 30
+        tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
+        # Define a function to update the label every second
+        def update_label():
+            if self.time_remaining >= 0:
+                label.config(text=self.time_remaining)
+                self.time_remaining -= 1
+                # Schedule the update again after 1 second
+                self.window.after(1000, update_label)
+            else:
+                self.destroy_window()
+
+        label = tk.Label(self.window, text=self.time_remaining, bg='grey', fg='yellow', font=("Helvetica", 14))
+        label.grid(row=3, column=3, columnspan=4, padx=10, pady=(0, 10))
+    
+        # Start updating the label
+        update_label()
+        
+    def destroy_window(self):
+        self.window.destroy()
         game_window = playAction(self.green_names, self.red_names)
 
     def clear_all_entries(self, event):
