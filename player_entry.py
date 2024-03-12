@@ -11,9 +11,20 @@ class PlayerEntry:
         self.window.title("Player Entry Screen")
         self.window.configure(bg='grey')
 
-        self.green_equipment_id_counter = 0
-        self.red_equipment_id_counter = 10
+        # Calculate screen width and height
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
 
+        # Set window size
+        window_width = 550  # Adjust as needed
+        window_height = 800  # Adjust as needed
+
+        # Calculate x and y coordinates for the top-left corner of the window
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+
+        # Set the geometry of the window
+        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
         # Add empty rows for spacing at the top
         for i in range(2):
             tk.Label(self.window, text="", bg='grey').grid(row=i, column=0)
@@ -50,8 +61,14 @@ class PlayerEntry:
         self.add_default_rows(self.red_table, 'Red', 15)
 
         # Create Buttons
-        tk.Button(self.window, text="Add New Player", command=self.handle_add_new_player_popup, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0).grid(row=2, columnspan=4, padx=10, pady=5)
-        tk.Button(self.window, text="Add Existing Player", command=self.handle_add_existing_player, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0).grid(row=3, columnspan=4, padx=10, pady=5)
+        self.add_new_player_button = tk.Button(self.window, text="Add New Player", command=self.handle_add_new_player_popup, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0)
+        self.add_new_player_button.grid(row=2, columnspan=4, padx=10, pady=5)
+
+        # Set to keep track of used equipment IDs
+        self.used_equipment_ids = set()
+
+        self.add_existing_player_button = tk.Button(self.window, text="Add Existing Player", command=self.handle_add_existing_player, relief=tk.RIDGE, font=("Helvetica", 12, "bold"), bg="white", fg="navy", borderwidth=5, highlightthickness=0)
+        self.add_existing_player_button.grid(row=3, columnspan=4, padx=10, pady=5)
 
         # Supabase connection
         self.supabase_url = 'https://xsqxdgtmmlfjubodeinc.supabase.co'
@@ -65,7 +82,19 @@ class PlayerEntry:
 
     # Destroys the player entry screen after 30 seconds and creates the player action screen
     def start_game(self, event):
-        self.time_remaining = 30
+        # Check if both teams have at least one player
+        if not self.green_names or not self.red_names:
+            messagebox.showerror("Error", "Both teams must have at least one player.")
+            return
+
+        # Disable the buttons during the countdown
+        self.add_new_player_button.config(state=tk.DISABLED)
+        self.add_existing_player_button.config(state=tk.DISABLED)
+
+        # Set the game status to indicate that the game is active
+        self.game_active = True
+
+        self.time_remaining = 3
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
         # Define a function to update the label every second
@@ -77,13 +106,21 @@ class PlayerEntry:
                 self.window.after(1000, update_label)
             else:
                 self.destroy_window()
+                # Re-enable the buttons after the countdown
+                self.add_new_player_button.config(state=tk.NORMAL)
+                self.add_existing_player_button.config(state=tk.NORMAL)
+                # Set the game status to indicate that the game is not active
+                self.game_active = False
 
         label = tk.Label(self.window, text=self.time_remaining, bg='grey', fg='yellow', font=("Helvetica", 14))
         label.grid(row=3, column=3, columnspan=4, padx=10, pady=(0, 10))
-    
+
         # Start updating the label
         update_label()
-        
+
+        # Disable the F12 function during the countdown
+        self.window.unbind("<F12>")
+
     def destroy_window(self):
         self.window.destroy()
         game_window = playAction(self.green_names, self.red_names)
@@ -92,6 +129,7 @@ class PlayerEntry:
         # Clear all player entries
         self.clear_entries(self.green_table)
         self.clear_entries(self.red_table)
+        self.used_equipment_ids.clear()
 
     def clear_entries(self, table):
         # Clear all widgets in the green team table
@@ -108,8 +146,7 @@ class PlayerEntry:
         self.red_ids = {}
 
         # Reset equipment ID counters
-        self.green_equipment_id_counter = 0
-        self.red_equipment_id_counter = 10
+
 
         # Add default rows again
         self.add_default_rows(self.green_table, 'Green', 15)
@@ -154,14 +191,8 @@ class PlayerEntry:
             equipment_label = tk.Label(table, bg='olivedrab' if team == 'Green' else 'maroon', fg='white')
             equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
 
-    def add_green_player(self, name, player_id):
+    def add_green_player(self, name, player_id, equipment_id):
         row_index = len(self.green_names) + 1
-
-        # Increment the green equipment ID counter
-        self.green_equipment_id_counter += 20
-
-        # Calculate the equipment ID
-        equipment_id = self.green_equipment_id_counter
 
         # Label for player ID
         id_label = tk.Label(self.green_table, text=f"{player_id}", bg='olivedrab', fg='white')
@@ -186,14 +217,8 @@ class PlayerEntry:
         self.udp_manager.broadcast_equipment_id(equipment_id)
 
 
-    def add_red_player(self, name, player_id):
+    def add_red_player(self, name, player_id, equipment_id):
         row_index = len(self.red_names) + 1
-
-        # Increment the red equipment ID counter
-        self.red_equipment_id_counter += 20
-
-        # Calculate the equipment ID
-        equipment_id = self.red_equipment_id_counter
 
         # Label for player ID
         id_label = tk.Label(self.red_table, text=f"{player_id}", bg='maroon', fg='white')
@@ -217,31 +242,47 @@ class PlayerEntry:
         # Broadcast the equipment ID
         self.udp_manager.broadcast_equipment_id(equipment_id)
 
+
     def handle_add_new_player_popup(self):
-        # self.new_popup.destroy()  # Close the current popup
+        self.add_new_player_button.config(state=tk.DISABLED)  # Disable the button
         self.new_player_popup = tk.Toplevel()
         self.new_player_popup.title("Add New Player")
 
         # Label and Entry for Player ID
         tk.Label(self.new_player_popup, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
-        self.new_player_id = tk.Entry(self.new_player_popup)
+        self.new_player_id = tk.Entry(self.new_player_popup, validate="key")
         self.new_player_id.grid(row=0, column=1, padx=10, pady=5)
+        self.new_player_id.config(validatecommand=(self.new_player_id.register(self.validate_player_id_input), '%P'))
 
         # Label and Entry for Player Name
         tk.Label(self.new_player_popup, text="Player Name:").grid(row=1, column=0, padx=10, pady=5)
         self.new_player_name = tk.Entry(self.new_player_popup)
         self.new_player_name.grid(row=1, column=1, padx=10, pady=5)
 
+        # Label and Entry for Equipment ID
+        tk.Label(self.new_player_popup, text="Equipment ID:").grid(row=2, column=0, padx=10, pady=5)
+        self.equipment_id_entry = tk.Entry(self.new_player_popup, validate="key")
+        self.equipment_id_entry.grid(row=2, column=1, padx=10, pady=5)
+        self.equipment_id_entry.config(validatecommand=(self.equipment_id_entry.register(self.validate_equipment_id_input), '%P'))
+
         # Label and Dropdown for Selecting Team
-        tk.Label(self.new_player_popup, text="Select Team:").grid(row=2, column=0, padx=10, pady=5)
+        tk.Label(self.new_player_popup, text="Select Team:").grid(row=3, column=0, padx=10, pady=5)
         self.team_var = tk.StringVar(self.new_player_popup)
         self.team_var.set("Green")  # Default team selection
         teams = ["Green", "Red"]  # List of teams
         team_dropdown = tk.OptionMenu(self.new_player_popup, self.team_var, *teams)
-        team_dropdown.grid(row=2, column=1, padx=10, pady=5)
+        team_dropdown.grid(row=3, column=1, padx=10, pady=5)
 
         # Confirm Button
-        tk.Button(self.new_player_popup, text="Confirm", command=self.check_and_add_new_player).grid(row=3, columnspan=2, padx=10, pady=10)
+        confirm_button = tk.Button(self.new_player_popup, text="Confirm", command=self.check_and_add_new_player)
+        confirm_button.grid(row=4, columnspan=2, padx=10, pady=10)
+
+        # Associate the enable_button method with the window close event
+        self.new_player_popup.protocol("WM_DELETE_WINDOW", lambda: (self.enable_button(self.add_new_player_button), self.new_player_popup.destroy()))
+
+    def enable_button(self, button):
+            # Enable the button
+            button.config(state=tk.NORMAL)
 
     def check_and_add_new_player(self):
         player_id = self.new_player_id.get()
@@ -257,33 +298,93 @@ class PlayerEntry:
             self.new_player_popup.destroy()  # Close the new player popup
 
     def handle_add_existing_player(self):
-        # self.new_popup.destroy()  # Close the current popup
+        # Disable the button to prevent multiple clicks
+        self.add_existing_player_button.config(state=tk.DISABLED)
+
+        # Create a new popup window for adding an existing player
         self.existing_popup = tk.Toplevel()
         self.existing_popup.title("Add Existing Player")
 
+        # Label and entry for Player ID
         tk.Label(self.existing_popup, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
-        self.existing_player_id = tk.Entry(self.existing_popup)
+        self.existing_player_id = tk.Entry(self.existing_popup, validate="key")
         self.existing_player_id.grid(row=0, column=1, padx=10, pady=5)
+        self.existing_player_id.config(validatecommand=(self.existing_player_id.register(self.validate_player_id_input), '%P'))
 
-        tk.Button(self.existing_popup, text="Confirm", command=self.add_existing_player).grid(row=1, columnspan=2, padx=10, pady=10)
+        # Label and entry for Equipment ID
+        tk.Label(self.existing_popup, text="Equipment ID:").grid(row=1, column=0, padx=10, pady=5)
+        self.existing_equipment_id = tk.Entry(self.existing_popup, validate="key")
+        self.existing_equipment_id.grid(row=1, column=1, padx=10, pady=5)
+        self.existing_equipment_id.config(validatecommand=(self.existing_equipment_id.register(self.validate_equipment_id_input), '%P'))
+
+        # Confirm button
+        tk.Button(self.existing_popup, text="Confirm", command=self.add_existing_player).grid(row=2, columnspan=2, padx=10, pady=10)
+
+        # Enable the button and destroy popup when closed
+        self.existing_popup.protocol("WM_DELETE_WINDOW", lambda: (self.enable_button(self.add_existing_player_button), self.existing_popup.destroy()))
 
     def add_new_player(self):
-        player_name = self.new_player_name.get()
-        player_id = self.new_player_id.get()
-        team = self.team_var.get()  # Get the selected team from the dropdown
-        self.add_green_player(player_name, player_id) if team == "Green" else self.add_red_player(player_name, player_id)
-        self.insert_to_supabase(player_name, player_id, team)
-        self.new_player_popup.destroy()  # Close the new player popup
+            player_name = self.new_player_name.get()
+            player_id = self.new_player_id.get()
+            equipment_id = self.equipment_id_entry.get()
+            team = self.team_var.get()
 
+            # Check if the team has reached the maximum number of players
+            if team == "Green" and len(self.green_names) >= 15:
+                messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
+                return
+            elif team == "Red" and len(self.red_names) >= 15:
+                messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
+                return
+            # Check if the equipment ID is already used
+            if equipment_id in self.used_equipment_ids:
+                messagebox.showerror("Error", "Equipment ID already in use. Please choose a different one.")
+                self.enable_button(self.add_new_player_button)
+                return
+
+            # Add the player to the appropriate team
+            if team == "Green":
+                self.add_green_player(player_name, player_id, equipment_id)
+            else:
+                self.add_red_player(player_name, player_id, equipment_id)
+
+            self.insert_to_supabase(player_name, player_id, team)
+            self.new_player_popup.destroy()  # Close the new player popup
+            self.enable_button(self.add_new_player_button)  # Re-enable the button
+            self.used_equipment_ids.add(equipment_id)
 
     def add_existing_player(self):
         player_id = self.existing_player_id.get()
+        equipment_id = self.existing_equipment_id.get()
         player_name, team = self.get_player_info_from_supabase(player_id)
+
+        # Check if the team has reached the maximum number of players
+        if team == "Green" and len(self.green_names) >= 15:
+            messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
+            return
+        elif team == "Red" and len(self.red_names) >= 15:
+            messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
+            return
+
+        # Check if the equipment ID is already used
+        if equipment_id in self.used_equipment_ids:
+            messagebox.showerror("Error", "Equipment ID already in use. Please choose a different one.")
+            self.enable_button(self.add_new_player_button)
+            return
+
+        # Add the player to the appropriate team
         if team == 'Green':
-            self.add_green_player(player_name, player_id)
+            self.add_green_player(player_name, player_id, equipment_id)
         else:
-            self.add_red_player(player_name, player_id)
-        self.existing_popup.destroy()  # Close the existing player popup
+            self.add_red_player(player_name, player_id, equipment_id)
+
+        # Add the equipment ID to the set of used IDs
+        self.used_equipment_ids.add(equipment_id)
+
+        # Close the existing player popup
+        self.existing_popup.destroy()
+        self.enable_button(self.add_existing_player_button)
+
 
     def insert_to_supabase(self, name, player_id, team):
         # Insert new player into the database
@@ -309,3 +410,17 @@ class PlayerEntry:
             return player_info['Name'], player_info['Team']
         else:
             messagebox.showerror("Error", "Player not found in database.")
+
+    def validate_player_id_input(self, input_text):
+        if input_text.isdigit() or input_text == "":
+            return True
+        else:
+            messagebox.showerror("Error", "Please enter a valid player ID (numeric characters only).")
+            return False
+
+    def validate_equipment_id_input(self, input_text):
+        if input_text.isdigit() or input_text == "":
+            return True
+        else:
+            messagebox.showerror("Error", "Please enter a valid equipment ID (numeric characters only).")
+            return False
