@@ -16,7 +16,7 @@ class PlayerEntry:
         screen_height = self.window.winfo_screenheight()
 
         # Set window size
-        window_width = 550  # Adjust as needed
+        window_width = 570  # Adjust as needed
         window_height = 800  # Adjust as needed
 
         # Calculate x and y coordinates for the top-left corner of the window
@@ -35,7 +35,7 @@ class PlayerEntry:
 
         # Frame to hold the title and tables
         frame = tk.Frame(self.window, bg='lightgrey')
-        frame.grid(row=1, column=0, columnspan=4)
+        frame.grid(row=1, column=0, columnspan=4, sticky ='nsew')
 
         greenTitle = tk.Label(frame, text="Green Team", bg='olivedrab', fg='white', font=("Quantum", 24, "bold"))
         greenTitle.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
@@ -94,7 +94,7 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 3
+        self.time_remaining = 30
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
         # Define a function to update the label every second
@@ -127,9 +127,12 @@ class PlayerEntry:
 
     def clear_all_entries(self, event):
         # Clear all player entries
-        self.clear_entries(self.green_table)
-        self.clear_entries(self.red_table)
-        self.used_equipment_ids.clear()
+        if not self.used_equipment_ids:
+            messagebox.showinfo("Info", "No entries to clear.")
+        else:
+            self.clear_entries(self.green_table)
+            self.clear_entries(self.red_table)
+            self.used_equipment_ids.clear()
 
     def clear_entries(self, table):
         # Clear all widgets in the green team table
@@ -244,9 +247,13 @@ class PlayerEntry:
 
 
     def handle_add_new_player_popup(self):
-        self.add_new_player_button.config(state=tk.DISABLED)  # Disable the button
+        self.add_new_player_button.config(state=tk.DISABLED)
         self.new_player_popup = tk.Toplevel()
         self.new_player_popup.title("Add New Player")
+
+        x_position = 425
+        y_position = 200
+        self.new_player_popup.geometry("+{}+{}".format(x_position, y_position))
 
         # Label and Entry for Player ID
         tk.Label(self.new_player_popup, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
@@ -295,15 +302,18 @@ class PlayerEntry:
         else:
             # If player ID is unique, add the player
             self.add_new_player()
-            self.new_player_popup.destroy()  # Close the new player popup
+            self.new_player_popup.destroy()
 
     def handle_add_existing_player(self):
         # Disable the button to prevent multiple clicks
         self.add_existing_player_button.config(state=tk.DISABLED)
-
         # Create a new popup window for adding an existing player
         self.existing_popup = tk.Toplevel()
         self.existing_popup.title("Add Existing Player")
+
+        x_position = 425
+        y_position = 200
+        self.existing_popup.geometry("+{}+{}".format(x_position, y_position))
 
         # Label and entry for Player ID
         tk.Label(self.existing_popup, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
