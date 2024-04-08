@@ -1,13 +1,15 @@
 import tkinter as tk
 from tkinter import messagebox
-from player_udp import player_udp
+from player_udp import PlayerUDP
 import supabase
 from play_action import playAction
+import time
+
 
 class PlayerEntry:
     def __init__(self):
         self.window = tk.Tk()
-        self.udp_manager = player_udp()
+        self.player_udp = PlayerUDP()
         self.window.title("Player Entry Screen")
         self.window.configure(bg='grey')
 
@@ -86,6 +88,10 @@ class PlayerEntry:
         if not self.green_names or not self.red_names:
             messagebox.showerror("Error", "Both teams must have at least one player.")
             return
+        # Collect equipment IDs for green team
+        green_equipment_ids = [equipment_id for equipment_id in self.green_ids.values()]
+        # Collect equipment IDs for red team
+        red_equipment_ids = [equipment_id for equipment_id in self.red_ids.values()]
 
         # Disable the buttons during the countdown
         self.add_new_player_button.config(state=tk.DISABLED)
@@ -94,7 +100,7 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 30
+        self.time_remaining = 1
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
         # Define a function to update the label every second
@@ -217,7 +223,7 @@ class PlayerEntry:
         self.green_names[name] = player_id
 
         # Broadcast the equipment ID
-        self.udp_manager.broadcast_equipment_id(equipment_id)
+        self.player_udp.broadcast_equipment_id(equipment_id)
 
 
     def add_red_player(self, name, player_id, equipment_id):
@@ -243,7 +249,7 @@ class PlayerEntry:
         self.red_names[name] = player_id
 
         # Broadcast the equipment ID
-        self.udp_manager.broadcast_equipment_id(equipment_id)
+        self.player_udp.broadcast_equipment_id(equipment_id)
 
 
     def handle_add_new_player_popup(self):
@@ -288,8 +294,8 @@ class PlayerEntry:
         self.new_player_popup.protocol("WM_DELETE_WINDOW", lambda: (self.enable_button(self.add_new_player_button), self.new_player_popup.destroy()))
 
     def enable_button(self, button):
-            # Enable the button
-            button.config(state=tk.NORMAL)
+        # Enable the button
+        button.config(state=tk.NORMAL)
 
     def check_and_add_new_player(self):
         player_id = self.new_player_id.get()
@@ -334,34 +340,34 @@ class PlayerEntry:
         self.existing_popup.protocol("WM_DELETE_WINDOW", lambda: (self.enable_button(self.add_existing_player_button), self.existing_popup.destroy()))
 
     def add_new_player(self):
-            player_name = self.new_player_name.get()
-            player_id = self.new_player_id.get()
-            equipment_id = self.equipment_id_entry.get()
-            team = self.team_var.get()
+        player_name = self.new_player_name.get()
+        player_id = self.new_player_id.get()
+        equipment_id = self.equipment_id_entry.get()
+        team = self.team_var.get()
 
-            # Check if the team has reached the maximum number of players
-            if team == "Green" and len(self.green_names) >= 15:
-                messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
-                return
-            elif team == "Red" and len(self.red_names) >= 15:
-                messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
-                return
-            # Check if the equipment ID is already used
-            if equipment_id in self.used_equipment_ids:
-                messagebox.showerror("Error", "Equipment ID already in use. Please choose a different one.")
-                self.enable_button(self.add_new_player_button)
-                return
+        # Check if the team has reached the maximum number of players
+        if team == "Green" and len(self.green_names) >= 15:
+            messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
+            return
+        elif team == "Red" and len(self.red_names) >= 15:
+            messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
+            return
+        # Check if the equipment ID is already used
+        if equipment_id in self.used_equipment_ids:
+            messagebox.showerror("Error", "Equipment ID already in use. Please choose a different one.")
+            self.enable_button(self.add_new_player_button)
+            return
 
-            # Add the player to the appropriate team
-            if team == "Green":
-                self.add_green_player(player_name, player_id, equipment_id)
-            else:
-                self.add_red_player(player_name, player_id, equipment_id)
+        # Add the player to the appropriate team
+        if team == "Green":
+            self.add_green_player(player_name, player_id, equipment_id)
+        else:
+            self.add_red_player(player_name, player_id, equipment_id)
 
-            self.insert_to_supabase(player_name, player_id, team)
-            self.new_player_popup.destroy()  # Close the new player popup
-            self.enable_button(self.add_new_player_button)  # Re-enable the button
-            self.used_equipment_ids.add(equipment_id)
+        self.insert_to_supabase(player_name, player_id, team)
+        self.new_player_popup.destroy()  # Close the new player popup
+        self.enable_button(self.add_new_player_button)  # Re-enable the button
+        self.used_equipment_ids.add(equipment_id)
 
     def add_existing_player(self):
         player_id = self.existing_player_id.get()
