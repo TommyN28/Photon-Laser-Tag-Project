@@ -3,8 +3,6 @@ from tkinter import messagebox
 from player_udp import PlayerUDP
 import supabase
 from play_action import playAction
-import time
-
 
 class PlayerEntry:
     def __init__(self):
@@ -12,6 +10,7 @@ class PlayerEntry:
         self.player_udp = PlayerUDP()
         self.window.title("Player Entry Screen")
         self.window.configure(bg='grey')
+
 
         # Calculate screen width and height
         screen_width = self.window.winfo_screenwidth()
@@ -88,6 +87,7 @@ class PlayerEntry:
         if not self.green_names or not self.red_names:
             messagebox.showerror("Error", "Both teams must have at least one player.")
             return
+
         # Collect equipment IDs for green team
         green_equipment_ids = [equipment_id for equipment_id in self.green_ids.values()]
         # Collect equipment IDs for red team
@@ -100,7 +100,8 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 1
+        self.time_remaining = 3
+
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
         # Define a function to update the label every second
@@ -111,6 +112,9 @@ class PlayerEntry:
                 # Schedule the update again after 1 second
                 self.window.after(1000, update_label)
             else:
+                self.player_udp.send_start_code()
+                self.player_udp.wait_for_start()
+                self.player_udp.start_traffic_generator(red_equipment_ids, green_equipment_ids)
                 self.destroy_window()
                 # Re-enable the buttons after the countdown
                 self.add_new_player_button.config(state=tk.NORMAL)
@@ -123,9 +127,9 @@ class PlayerEntry:
 
         # Start updating the label
         update_label()
-
         # Disable the F12 function during the countdown
         self.window.unbind("<F12>")
+
 
     def destroy_window(self):
         self.window.destroy()
@@ -155,7 +159,6 @@ class PlayerEntry:
         self.red_ids = {}
 
         # Reset equipment ID counters
-
 
         # Add default rows again
         self.add_default_rows(self.green_table, 'Green', 15)
@@ -221,7 +224,7 @@ class PlayerEntry:
 
         # Update the dictionary with the player's information
         self.green_names[name] = player_id
-
+        self.green_ids[player_id] = equipment_id
         # Broadcast the equipment ID
         self.player_udp.broadcast_equipment_id(equipment_id)
 
@@ -247,6 +250,7 @@ class PlayerEntry:
 
         # Update the dictionary with the player's information
         self.red_names[name] = player_id
+        self.red_ids[player_id] = equipment_id
 
         # Broadcast the equipment ID
         self.player_udp.broadcast_equipment_id(equipment_id)
