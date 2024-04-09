@@ -1,4 +1,5 @@
 from tkinter import *
+from datetime import datetime, timedelta
 
 class playAction:
     def __init__(self, green_players, red_players):
@@ -8,6 +9,17 @@ class playAction:
         screen_width = 1200
         screen_height = 900
         self.root.geometry(str(screen_width) + "x" + str(screen_height))
+
+        # Initialize game duration and countdown variables
+        self.game_duration = timedelta(minutes=6)
+        self.countdown_duration = timedelta(seconds=30)
+        self.start_time = datetime.now()
+        self.end_time = self.start_time + self.game_duration
+        self.warning_time = self.end_time - self.countdown_duration
+
+        # Set up blank timer label
+        self.timer_label = Label(self.root, text="", font=("Helvetica", 16, "bold"))
+        self.timer_label.pack()
 
         # temp. var. for displaying score
         score = 0
@@ -36,27 +48,40 @@ class playAction:
             Label(player_frame, fg="red2", bg="black", text=" - " + name.upper(), font=("Helvetica", 12, "bold")).pack(side=LEFT)
             Label(player_frame, fg="red2", bg="black", text=score, font=("Helvetica", 12, "bold")).pack(side=RIGHT)
 
-        # Set up green side player feed
-        self.green_feed = Frame(self.root,  bg="gray40", bd=1)
-        self.green_feed.pack(fill=BOTH, expand=True)
-        Label(self.green_feed, bg="gray40", text="Green Feed Placeholder", font=("Helvetica", 16, "bold")).pack(pady=5)
-
-        # Set up red side player feed
-        self.red_feed = Frame(self.root,  bg="gray40", bd=1)
-        self.red_feed.pack(fill=BOTH, expand=True)
-        Label(self.red_feed,  bg="gray40", text="Red Feed Placeholder", font=("Helvetica", 16, "bold")).pack(pady=5)
-
         # Set up middle screen
         self.middle_screen = Frame(self.root, bg="gray25", bd=1)
         self.middle_screen.pack(fill=BOTH, expand=True)
-        Label(self.middle_screen, bg="gray25", text="Fifth Frame Placeholder", font=("Helvetica", 16, "bold")).pack(pady=5)
+        Label(self.middle_screen, fg = "white", bg = "gray25", text="Action Log", font=("Helvetica", 16, "bold")).pack(pady=5)
+
+        # Set up timer label at the bottom row
+        self.timer_label_bottom = Label(self.root, fg = "white", bg="gray25", text="", font=("Helvetica", 16, "bold"))
+        self.timer_label_bottom.pack(side=BOTTOM)
 
         # Place frames in their respective corners
         self.root.geometry("+0+0")
         self.green_frame.place(x=0, y=0, width=screen_width/2, height=screen_height/2)  # Top-left corner
         self.red_frame.place(x=screen_width - screen_width/2, y=0, width=screen_width/2, height=screen_height/2)  # Top-right corner
-        self.green_feed.place(x=0, y=screen_height - screen_height/2, width=screen_width/3, height=screen_height/2)  # Bottom-left corner
-        self.red_feed.place(x=screen_width - screen_width/3 - 1, y=screen_height - screen_height/2, width=screen_width/3 + 1, height=screen_height/2)  # Bottom-right corner (+/- 1 to counteract rounding)
-        self.middle_screen.place(x=screen_width/3, y=screen_height - screen_height/2, width=screen_width/3, height=screen_height/2)
+        self.middle_screen.place(x=0, y=screen_height/2, width=screen_width, height=screen_height/2)  # Middle
+        self.timer_label_bottom.place(x=0, y=screen_height - 50, width=screen_width)  # Bottom
+
+        # Start updating the timer
+        self.update_timer()
 
         self.root.mainloop()
+
+    def update_timer(self):
+        # Calculate remaining time
+        remaining_time = self.end_time - datetime.now()
+
+        if remaining_time <= timedelta(seconds=0):
+            # Game over
+            self.timer_label_bottom.config(text="Game Over")
+        elif remaining_time <= self.countdown_duration:
+            # 30-second warning
+            self.timer_label_bottom.config(text="Game starts in: " + str(remaining_time)[2:7])  # Format as mm:ss
+            self.timer_label_bottom.after(1000, self.update_timer)
+        else:
+            # Display normal countdown
+            self.timer_label_bottom.config(text="Time remaining: " + str(remaining_time)[2:7])  # Format as mm:ss
+            self.timer_label_bottom.after(1000, self.update_timer)
+
