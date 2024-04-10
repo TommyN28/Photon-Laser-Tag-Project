@@ -30,6 +30,10 @@ The main file for this project is called main.py, and it needs to be run using p
 
 Then the user, using the command python3 main.py, should execute the code.
 
+The user will also need to install the pygame module using:
+
+--pip3 install pygame
+
 ### Interacting with the Program:
 
 The program simulates a 1980s-style laser tag game. Upon starting the program, the user is greeted by a short splash screen before the player entry screen is presented. On the player entry screen, the player will click a button to enter their ID and codename. 
