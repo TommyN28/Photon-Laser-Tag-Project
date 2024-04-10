@@ -3,6 +3,8 @@ from tkinter import messagebox
 from player_udp import PlayerUDP
 import supabase
 from play_action import playAction
+import random
+import pygame
 
 class PlayerEntry:
     def __init__(self):
@@ -100,9 +102,18 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 3
+        self.time_remaining = 20
 
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
+        
+        # Select a random music track to play during countdown
+        def play_music():
+            num = random.randrange(1,8)
+            filename = ("photon_tracks/Track0" + str(num) + ".mp3")
+            pygame.init()
+            pygame.mixer.init()
+            pygame.mixer.music.load(filename)
+            pygame.mixer.music.play()
 
         # Define a function to update the label every second
         def update_label():
@@ -111,6 +122,8 @@ class PlayerEntry:
                 self.time_remaining -= 1
                 # Schedule the update again after 1 second
                 self.window.after(1000, update_label)
+                if self.time_remaining == 15:
+                    play_music()
             else:
                 self.player_udp.send_start_code()
                 self.player_udp.wait_for_start()
@@ -129,7 +142,6 @@ class PlayerEntry:
         update_label()
         # Disable the F12 function during the countdown
         self.window.unbind("<F12>")
-
 
     def destroy_window(self):
         self.window.destroy()
