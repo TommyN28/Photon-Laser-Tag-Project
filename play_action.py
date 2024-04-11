@@ -12,10 +12,9 @@ class playAction:
 
         # Initialize game duration and countdown variables
         self.game_duration = timedelta(minutes=6)
-        self.countdown_duration = timedelta(seconds=30)
-        self.start_time = datetime.now()
-        self.end_time = self.start_time + self.game_duration
-        self.warning_time = self.end_time - self.countdown_duration
+        self.countdown_duration = timedelta(seconds=2)
+        self.start_time = None
+        self.end_time = None
 
         # Set up blank timer label
         self.timer_label = Label(self.root, text="", font=("Helvetica", 16, "bold"))
@@ -53,35 +52,52 @@ class playAction:
         self.middle_screen.pack(fill=BOTH, expand=True)
         Label(self.middle_screen, fg = "white", bg = "gray25", text="Action Log", font=("Helvetica", 16, "bold")).pack(pady=5)
 
-        # Set up timer label at the bottom row
-        self.timer_label_bottom = Label(self.root, fg = "white", bg="gray25", text="", font=("Helvetica", 16, "bold"))
-        self.timer_label_bottom.pack(side=BOTTOM)
-
         # Place frames in their respective corners
         self.root.geometry("+0+0")
         self.green_frame.place(x=0, y=0, width=screen_width/2, height=screen_height/2)  # Top-left corner
         self.red_frame.place(x=screen_width - screen_width/2, y=0, width=screen_width/2, height=screen_height/2)  # Top-right corner
         self.middle_screen.place(x=0, y=screen_height/2, width=screen_width, height=screen_height/2)  # Middle
-        self.timer_label_bottom.place(x=0, y=screen_height - 50, width=screen_width)  # Bottom
+
+        # Set up timer label
+        self.timer_label = Label(self.middle_screen, fg = "white", bg = "gray25", text="", font=("Helvetica", 16, "bold"))
+        self.timer_label.pack(side=BOTTOM)
 
         # Start updating the timer
-        self.update_timer()
+        self.start_countdown()
 
         self.root.mainloop()
 
-    def update_timer(self):
-        # Calculate remaining time
-        remaining_time = self.end_time - datetime.now()
+    def start_countdown(self):
+        # Start the 30-second countdown
+        self.countdown_end_time = datetime.now() + self.countdown_duration
+        self.update_countdown()
 
+    def update_countdown(self):
+        # Update the countdown timer label
+        remaining_time = self.countdown_end_time - datetime.now()
+        if remaining_time <= timedelta(seconds=0):
+            # Start the game timer after the countdown finishes
+            self.start_game_timer()
+        else:
+            self.timer_label.config(text="Game starts in: " + str(remaining_time)[2:7])  # Format as mm:ss
+            self.timer_label.after(1000, self.update_countdown)
+
+    def start_game_timer(self):
+        # Start the game timer for 6 minutes
+        self.game_end_time = datetime.now() + self.game_duration
+        self.update_game_timer()
+
+    def update_game_timer(self):
+        # Update the game timer label
+        remaining_time = self.game_end_time - datetime.now()
         if remaining_time <= timedelta(seconds=0):
             # Game over
-            self.timer_label_bottom.config(text="Game Over")
-        elif remaining_time <= self.countdown_duration:
-            # 30-second warning
-            self.timer_label_bottom.config(text="Game starts in: " + str(remaining_time)[2:7])  # Format as mm:ss
-            self.timer_label_bottom.after(1000, self.update_timer)
+            self.timer_label.config(text="Game Over")
         else:
-            # Display normal countdown
-            self.timer_label_bottom.config(text="Time remaining: " + str(remaining_time)[2:7])  # Format as mm:ss
-            self.timer_label_bottom.after(1000, self.update_timer)
+            self.timer_label.config(text="Time remaining: " + str(remaining_time)[2:7])  # Format as mm:ss
+            self.timer_label.after(1000, self.update_game_timer)
 
+if __name__ == "__main__":
+    green_players = ["Player1", "Player2", "Player3"]
+    red_players = ["Player4", "Player5", "Player6"]
+    playAction(green_players, red_players)
