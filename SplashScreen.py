@@ -1,6 +1,4 @@
 from tkinter import *
-# Imports a "Page" class from the main screen code
-#from csce3513_project.Page import Page
 from PIL import Image, ImageTk
 
 class Splash:

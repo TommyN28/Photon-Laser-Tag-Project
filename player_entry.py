@@ -14,7 +14,7 @@ class PlayerEntry:
         self.window.configure(bg='grey')
 
 
-        # Calculate screen width and height
+    # Calculate screen width and height
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
 
@@ -102,10 +102,10 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 20
+        self.time_remaining = 3
 
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
-        
+
         # Select a random music track to play during countdown
         def play_music():
             num = random.randrange(1,8)
@@ -125,15 +125,15 @@ class PlayerEntry:
                 if self.time_remaining == 15:
                     play_music()
             else:
-                self.player_udp.send_start_code()
-                self.player_udp.wait_for_start()
-                self.player_udp.start_traffic_generator(red_equipment_ids, green_equipment_ids)
                 self.destroy_window()
                 # Re-enable the buttons after the countdown
                 self.add_new_player_button.config(state=tk.NORMAL)
                 self.add_existing_player_button.config(state=tk.NORMAL)
                 # Set the game status to indicate that the game is not active
                 self.game_active = False
+
+
+
 
         label = tk.Label(self.window, text=self.time_remaining, bg='grey', fg='yellow', font=("Helvetica", 14))
         label.grid(row=3, column=3, columnspan=4, padx=10, pady=(0, 10))
@@ -239,6 +239,7 @@ class PlayerEntry:
         self.green_ids[player_id] = equipment_id
         # Broadcast the equipment ID
         self.player_udp.broadcast_equipment_id(equipment_id)
+
 
 
     def add_red_player(self, name, player_id, equipment_id):

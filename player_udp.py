@@ -19,13 +19,24 @@ TRANSMIT_PORT: int = 7501
 RECEIVE_PORT: int = 7500
 
 class PlayerUDP:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._init_done = False
+        return cls._instance
+
     def __init__(self):
-        # Initialize the UDP socket for broadcasting
-        self.broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self.broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        # Initialize the UDP socket for receiving
-        self.receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.receive_socket.bind(("", RECEIVE_PORT))  # Bind to RECEIVE_PORT for receiving
+        if not self._instance._init_done:
+            # Initialize the UDP socket for broadcasting
+            self.broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            self.broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            # Initialize the UDP socket for receiving
+            self.receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.receive_socket.bind(("", RECEIVE_PORT))  # Bind to RECEIVE_PORT for receiving
+
+            self._instance._init_done = True
+
 
     def broadcast_equipment_id(self, equipment_id):
         # Broadcast the equipment ID over UDP
@@ -47,6 +58,7 @@ class PlayerUDP:
 
     def wait_for_start(self):
         print("Waiting for start from game software")
+        self.send_start_code()
         while True:
             try:
                 data, _ = self.receive_socket.recvfrom(RECEIVE_PORT)
@@ -58,27 +70,30 @@ class PlayerUDP:
 
     def start_traffic_generator(self, red_players, green_players):
         traffic_thread = threading.Thread(target=self.generate_traffic, args=(red_players, green_players))
+        self.wait_for_start()
         traffic_thread.start()
 
     def generate_traffic(self, red_players, green_players):
+        print("Starting traffic generation")
         counter = 0
-
         while True:
             try:
+                # Select random players
                 if random.randint(1, 2) == 1:
-                    redplayer = random.choice(red_players)
+                    redplayer = random.choice(list(red_players.keys()))
                 else:
-                    redplayer = random.choice(red_players)
+                    redplayer = random.choice(list(red_players.keys()))
 
                 if random.randint(1, 2) == 1:
-                    greenplayer = random.choice(green_players)
+                    greenplayer = random.choice(list(green_players.keys()))
                 else:
-                    greenplayer = random.choice(green_players)
+                    greenplayer = random.choice(list(green_players.keys()))
 
+                # Construct message
                 if random.randint(1, 2) == 1:
-                    message = f"{redplayer}:{greenplayer}"
+                    message = f"{redplayer} Tag {greenplayer}"
                 else:
-                    message = f"{greenplayer}:{redplayer}"
+                    message = f"{greenplayer} Tag {redplayer}"
 
                 # After 10 iterations, send base hit
                 if counter == 10:
@@ -86,7 +101,7 @@ class PlayerUDP:
                 if counter == 20:
                     message = f"{greenplayer}:53"
 
-                print("Transmitting to game: " + message)
+                logging.info("Transmitting message to game: %s", message)
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)
@@ -94,19 +109,18 @@ class PlayerUDP:
                 # Receive answer from game software
                 data, _ = self.receive_socket.recvfrom(BUFFER_SIZE)
                 received_data = data.decode('utf-8')
-                print ("Received from game software: " + received_data)
-                print ('')
+                logging.info("Received response from game software: %s", received_data)
 
                 counter += 1
-                if received_data == str(END_GAME_CODE) or counter >= 30:  # End game condition or maximum iterations
+                if received_data == str(END_GAME_CODE):
                     break
                 time.sleep(random.randint(1, 3))
 
             except Exception as e:
-                print("An error occurred:", e)
+                logging.error("An error occurred: %s", e)
                 break
+        logging.info("Traffic generation complete")
 
-        print("Traffic generation complete")
     def send_end_code(self):
         end_code = str(END_GAME_CODE).encode()  # Convert integer to bytes
         try:
