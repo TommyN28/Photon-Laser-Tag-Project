@@ -118,4 +118,10 @@ class playAction:
 
     def start_traffic_generator(self):
         # Start the traffic generator
-        self.player_udp.start_traffic_generator(self.green_players, self.red_players)
+        self.player_udp.start_traffic_generator(self.green_players, self.red_players, self.update_scrollable_screen)
+
+    def update_scrollable_screen(self, received_data):
+        # Update the scrollable screen with the received data
+        # For example:
+        self.play_by_play_text.insert(END, received_data + '\n')
+

@@ -34,9 +34,7 @@ class PlayerUDP:
             # Initialize the UDP socket for receiving
             self.receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.receive_socket.bind(("", RECEIVE_PORT))  # Bind to RECEIVE_PORT for receiving
-
             self._instance._init_done = True
-
 
     def broadcast_equipment_id(self, equipment_id):
         # Broadcast the equipment ID over UDP
@@ -68,12 +66,13 @@ class PlayerUDP:
             except Exception as e:
                 print(f"Error while waiting for start: {e}")
 
-    def start_traffic_generator(self, red_players, green_players):
-        traffic_thread = threading.Thread(target=self.generate_traffic, args=(red_players, green_players))
+    def start_traffic_generator(self, red_players, green_players, callback):
+        traffic_thread = threading.Thread(target=self.generate_traffic, args=(red_players, green_players, callback))
         self.wait_for_start()
         traffic_thread.start()
 
-    def generate_traffic(self, red_players, green_players):
+
+    def generate_traffic(self, red_players, green_players, callback):
         print("Starting traffic generation")
         counter = 0
         while True:
@@ -101,8 +100,6 @@ class PlayerUDP:
                 if counter == 20:
                     message = f"{greenplayer}:53"
 
-                logging.info("Transmitting message to game: %s", message)
-
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)
 
@@ -110,6 +107,7 @@ class PlayerUDP:
                 data, _ = self.receive_socket.recvfrom(BUFFER_SIZE)
                 received_data = data.decode('utf-8')
                 logging.info("Received response from game software: %s", received_data)
+                callback(received_data)
 
                 counter += 1
                 if received_data == str(END_GAME_CODE):
@@ -129,3 +127,4 @@ class PlayerUDP:
                 logging.info("End code 221 sent.")
         except Exception as e:
             logging.error("Failed to send end code 221:", e)
+

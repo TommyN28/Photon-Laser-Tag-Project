@@ -5,6 +5,7 @@ import supabase
 from play_action import playAction
 import random
 import pygame
+from User import User
 
 class PlayerEntry:
     def __init__(self):
@@ -58,6 +59,7 @@ class PlayerEntry:
         self.green_ids = {}
         self.red_names = {}
         self.red_ids = {}
+        self.users = {}
 
         # Add default rows for each team
         self.add_default_rows(self.green_table, 'Green', 15)
@@ -89,11 +91,6 @@ class PlayerEntry:
         if not self.green_names or not self.red_names:
             messagebox.showerror("Error", "Both teams must have at least one player.")
             return
-
-        # Collect equipment IDs for green team
-        green_equipment_ids = [equipment_id for equipment_id in self.green_ids.values()]
-        # Collect equipment IDs for red team
-        red_equipment_ids = [equipment_id for equipment_id in self.red_ids.values()]
 
         # Disable the buttons during the countdown
         self.add_new_player_button.config(state=tk.DISABLED)
@@ -169,6 +166,7 @@ class PlayerEntry:
         self.green_ids = {}
         self.red_names = {}
         self.red_ids = {}
+        self.users = {}
 
         # Reset equipment ID counters
 
@@ -375,6 +373,8 @@ class PlayerEntry:
             self.enable_button(self.add_new_player_button)
             return
 
+        user = User(len(self.users) + 1, equipment_id, player_id, player_name)
+
         # Add the player to the appropriate team
         if team == "Green":
             self.add_green_player(player_name, player_id, equipment_id)
@@ -385,6 +385,7 @@ class PlayerEntry:
         self.new_player_popup.destroy()  # Close the new player popup
         self.enable_button(self.add_new_player_button)  # Re-enable the button
         self.used_equipment_ids.add(equipment_id)
+        self.users[player_id] = user
 
     def add_existing_player(self):
         player_id = self.existing_player_id.get()
@@ -405,6 +406,8 @@ class PlayerEntry:
             self.enable_button(self.add_new_player_button)
             return
 
+        user = User(len(self.users) + 1, equipment_id, player_id, player_name)
+
         # Add the player to the appropriate team
         if team == 'Green':
             self.add_green_player(player_name, player_id, equipment_id)
@@ -417,6 +420,7 @@ class PlayerEntry:
         # Close the existing player popup
         self.existing_popup.destroy()
         self.enable_button(self.add_existing_player_button)
+        self.users[player_id] = user
 
 
     def insert_to_supabase(self, name, player_id, team):
