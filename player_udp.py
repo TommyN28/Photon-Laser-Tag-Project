@@ -71,34 +71,38 @@ class PlayerUDP:
         self.wait_for_start()
         traffic_thread.start()
 
-
     def generate_traffic(self, red_players, green_players, callback):
         print("Starting traffic generation")
         counter = 0
         while True:
             try:
                 # Select random players
-                if random.randint(1, 2) == 1:
-                    redplayer = random.choice(list(red_players.keys()))
-                else:
-                    redplayer = random.choice(list(red_players.keys()))
+                red_player = random.choice(list(red_players.values()))
+                green_player = random.choice(list(green_players.values()))
 
-                if random.randint(1, 2) == 1:
-                    greenplayer = random.choice(list(green_players.keys()))
-                else:
-                    greenplayer = random.choice(list(green_players.keys()))
+                # Get player names and equipment IDs
+                red_player_name = red_player['name']
+                green_player_name = green_player['name']
+                red_equipment_id = red_player['equipment_id']
+                green_equipment_id = green_player['equipment_id']
+
+                # Extract equipment IDs from nested dictionaries
+                if isinstance(red_equipment_id, dict):
+                    red_equipment_id = red_equipment_id['equipment_id']
+                if isinstance(green_equipment_id, dict):
+                    green_equipment_id = green_equipment_id['equipment_id']
 
                 # Construct message
                 if random.randint(1, 2) == 1:
-                    message = f"{redplayer} Tag {greenplayer}"
+                    message = f"{red_player_name} (E ID: {red_equipment_id}) Tag {green_player_name} (E ID: {green_equipment_id})"
                 else:
-                    message = f"{greenplayer} Tag {redplayer}"
+                    message = f"{green_player_name} (E ID: {green_equipment_id}) Tag {red_player_name} (E ID: {red_equipment_id})"
 
                 # After 10 iterations, send base hit
                 if counter == 10:
-                    message = f"{redplayer}:43"
+                    message = f"{red_player_name} (E ID: {red_equipment_id}):43"
                 if counter == 20:
-                    message = f"{greenplayer}:53"
+                    message = f"{green_player_name} (E ID: {green_equipment_id}):53"
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)

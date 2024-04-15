@@ -55,10 +55,8 @@ class PlayerEntry:
         self.red_table = tk.Frame(frame, bg='maroon')
         self.red_table.grid(row=1, column=1, padx=10, pady=10, sticky='nsew')
 
-        self.green_names = {}
-        self.green_ids = {}
-        self.red_names = {}
-        self.red_ids = {}
+        self.green_players = {}
+        self.red_players = {}
         self.users = {}
 
         # Add default rows for each team
@@ -88,7 +86,7 @@ class PlayerEntry:
     # Destroys the player entry screen after 30 seconds and creates the player action screen
     def start_game(self, event):
         # Check if both teams have at least one player
-        if not self.green_names or not self.red_names:
+        if not self.green_players or not self.red_players:
             messagebox.showerror("Error", "Both teams must have at least one player.")
             return
 
@@ -142,7 +140,7 @@ class PlayerEntry:
 
     def destroy_window(self):
         self.window.destroy()
-        game_window = playAction(self.green_names, self.red_names)
+        game_window = playAction(self.green_players, self.red_players)
 
     def clear_all_entries(self, event):
         # Clear all player entries
@@ -162,11 +160,10 @@ class PlayerEntry:
             widget.destroy()
 
         # Reset dictionaries
-        self.green_names = {}
-        self.green_ids = {}
-        self.red_names = {}
-        self.red_ids = {}
+        self.red_players = {}
         self.users = {}
+        self.green_players = {}
+
 
         # Reset equipment ID counters
 
@@ -214,7 +211,7 @@ class PlayerEntry:
             equipment_label.grid(row=i+1, column=3, padx=5, pady=5, sticky='w')
 
     def add_green_player(self, name, player_id, equipment_id):
-        row_index = len(self.green_names) + 1
+        row_index = len(self.green_players) + 1
 
         # Label for player ID
         id_label = tk.Label(self.green_table, text=f"{player_id}", bg='olivedrab', fg='white')
@@ -232,16 +229,21 @@ class PlayerEntry:
         score_label = tk.Label(self.green_table, text="", bg='olivedrab', fg='white')
         score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
-        # Update the dictionary with the player's information
-        self.green_names[name] = player_id
-        self.green_ids[player_id] = equipment_id
-        # Broadcast the equipment ID
+        # Update the dictionaries with the player's information
+        self.green_players[player_id] = {
+            'name': name,
+            'equipment_id': {
+                'id': player_id,
+                'equipment_id': equipment_id,
+                'score': 0
+            }
+        }
+
+    # Broadcast the equipment ID
         self.player_udp.broadcast_equipment_id(equipment_id)
 
-
-
     def add_red_player(self, name, player_id, equipment_id):
-        row_index = len(self.red_names) + 1
+        row_index = len(self.red_players) + 1
 
         # Label for player ID
         id_label = tk.Label(self.red_table, text=f"{player_id}", bg='maroon', fg='white')
@@ -259,9 +261,15 @@ class PlayerEntry:
         score_label = tk.Label(self.red_table, text="", bg='maroon', fg='white')
         score_label.grid(row=row_index, column=4, padx=5, pady=5, sticky='w')
 
-        # Update the dictionary with the player's information
-        self.red_names[name] = player_id
-        self.red_ids[player_id] = equipment_id
+        # Update the dictionaries with the player's information
+        self.red_players[player_id] = {
+            'name': name,
+            'equipment_id': {
+                'id': player_id,
+                'equipment_id': equipment_id,
+                'score': 0
+            }
+        }
 
         # Broadcast the equipment ID
         self.player_udp.broadcast_equipment_id(equipment_id)
@@ -361,10 +369,10 @@ class PlayerEntry:
         team = self.team_var.get()
 
         # Check if the team has reached the maximum number of players
-        if team == "Green" and len(self.green_names) >= 15:
+        if team == "Green" and len(self.green_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
             return
-        elif team == "Red" and len(self.red_names) >= 15:
+        elif team == "Red" and len(self.red_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
             return
         # Check if the equipment ID is already used
@@ -393,10 +401,10 @@ class PlayerEntry:
         player_name, team = self.get_player_info_from_supabase(player_id)
 
         # Check if the team has reached the maximum number of players
-        if team == "Green" and len(self.green_names) >= 15:
+        if team == "Green" and len(self.green_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Green team.")
             return
-        elif team == "Red" and len(self.red_names) >= 15:
+        elif team == "Red" and len(self.red_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
             return
 

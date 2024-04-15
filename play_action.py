@@ -13,7 +13,9 @@ class playAction:
         self.root.geometry(str(screen_width) + "x" + str(screen_height))
         self.player_udp = PlayerUDP()
         self.root.protocol("WM_DELETE_WINDOW", self.on_window_close)
-
+        self.player_scores = {player_info['name']: 0 for player_info in green_players.values()}
+        self.player_scores.update({player_info['name']: 0 for player_info in red_players.values()})
+        self.label_names = {}
         # Initialize game duration and countdown variables
         self.game_duration = timedelta(minutes=6)
         self.countdown_duration = timedelta(seconds=3)
@@ -36,11 +38,14 @@ class playAction:
         Label(self.green_frame, fg="green yellow", bg="black", text="ALPHA GREEN", font=("Helvetica", 16, "bold")).pack(pady=5)
 
         # Display green team names
-        for name in green_players:
+        for player_info in green_players.values():
             player_frame = Frame(self.green_frame, bg="black")
             player_frame.pack(fill=X)
-            Label(player_frame, fg="green yellow", bg="black", text=" - " + name.upper(), font=("Helvetica", 12, "bold")).pack(side=LEFT)
-            Label(player_frame, fg="green yellow", bg="black", text=score, font=("Helvetica", 12, "bold")).pack(side=RIGHT)
+            player_name_label = Label(player_frame, fg="green yellow", bg="black", text=" - " + player_info['name'].upper(), font=("Helvetica", 12, "bold"))
+            player_name_label.pack(side=LEFT)
+            player_score_label = Label(player_frame, fg="green yellow", bg="black", text="0", font=("Helvetica", 12, "bold"))
+            player_score_label.pack(side=RIGHT)
+            self.label_names[player_info['name']] = player_score_label  # Store the label widget
 
         # Set up red team player list
         self.red_frame = Frame(self.root, bg="black", bd=1)
@@ -48,13 +53,16 @@ class playAction:
         Label(self.red_frame, fg="red2", bg="black", text="ALPHA RED", font=("Helvetica", 16, "bold")).pack(pady=5)
 
         # Display red team names
-        for name in red_players:
+        for player_info in red_players.values():
             player_frame = Frame(self.red_frame, bg="black")
             player_frame.pack(fill=X)
-            Label(player_frame, fg="red2", bg="black", text=" - " + name.upper(), font=("Helvetica", 12, "bold")).pack(side=LEFT)
-            Label(player_frame, fg="red2", bg="black", text=score, font=("Helvetica", 12, "bold")).pack(side=RIGHT)
+            player_name_label = Label(player_frame, fg="red2", bg="black", text=" - " + player_info['name'].upper(), font=("Helvetica", 12, "bold"))
+            player_name_label.pack(side=LEFT)
+            player_score_label = Label(player_frame, fg="red2", bg="black", text="0", font=("Helvetica", 12, "bold"))
+            player_score_label.pack(side=RIGHT)
+            self.label_names[player_info['name']] = player_score_label
 
-        # Set up middle screen
+            # Set up middle screen
         self.middle_screen = Frame(self.root, bg="gray25", bd=1)
         self.middle_screen.pack(fill=BOTH, expand=True)
 
@@ -120,8 +128,33 @@ class playAction:
         # Start the traffic generator
         self.player_udp.start_traffic_generator(self.green_players, self.red_players, self.update_scrollable_screen)
 
+
     def update_scrollable_screen(self, received_data):
-        # Update the scrollable screen with the received data
-        # For example:
+        # Update the scrollable screen with the received data and update scores
         self.play_by_play_text.insert(END, received_data + '\n')
+
+        # Parse received data to determine player interactions
+        # For example:
+        # received_data format: "Player1 (E ID: 123) Tag Player2 (E ID: 456)"
+        interaction = received_data.split(" Tag ")
+
+        # Extract player names
+        tagging_player = interaction[0].split(" (")[0]
+        tagged_player = interaction[1].split(" (")[0]
+
+        # Check if players are from the same team
+        is_same_team = (tagging_player in self.green_players and tagged_player in self.green_players) \
+                       or (tagging_player in self.red_players and tagged_player in self.red_players)
+
+        # Update scores based on team affiliation
+        if is_same_team:
+            self.player_scores[tagging_player] -= 10
+        else:
+            self.player_scores[tagging_player] += 10
+
+        # Update GUI to display updated scores
+        for player, score in self.player_scores.items():
+            self.label_names[player].config(text=f"{score}")
+
+
 
