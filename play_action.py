@@ -22,15 +22,12 @@ class playAction:
         self.start_time = None
         self.end_time = None
 
-        self.green_players = green_players or []
-        self.red_players = red_players or []
+        self.green_players = green_players or {}
+        self.red_players = red_players or {}
 
         # Set up blank timer label
         self.timer_label = Label(self.root, text="", font=("Helvetica", 16, "bold"))
         self.timer_label.pack()
-
-        # temp. var. for displaying score
-        score = 0
 
         # Set up green player list
         self.green_frame = Frame(self.root, bg="black", bd=1)
@@ -133,9 +130,6 @@ class playAction:
         # Update the scrollable screen with the received data and update scores
         self.play_by_play_text.insert(END, received_data + '\n')
 
-        # Parse received data to determine player interactions
-        # For example:
-        # received_data format: "Player1 (E ID: 123) Tag Player2 (E ID: 456)"
         interaction = received_data.split(" Tag ")
 
         # Extract player names
@@ -155,6 +149,4 @@ class playAction:
         # Update GUI to display updated scores
         for player, score in self.player_scores.items():
             self.label_names[player].config(text=f"{score}")
-
-
 

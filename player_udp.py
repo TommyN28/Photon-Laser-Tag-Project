@@ -5,7 +5,6 @@ import logging
 from typing import Tuple
 import threading
 
-
 # Defining constants for transmitting and receiving codes
 START_GAME_CODE: int = 202
 END_GAME_CODE: int = 221
@@ -98,11 +97,8 @@ class PlayerUDP:
                 else:
                     message = f"{green_player_name} (E ID: {green_equipment_id}) Tag {red_player_name} (E ID: {red_equipment_id})"
 
-                # After 10 iterations, send base hit
-                if counter == 10:
-                    message = f"{red_player_name} (E ID: {red_equipment_id}):43"
-                if counter == 20:
-                    message = f"{green_player_name} (E ID: {green_equipment_id}):53"
+                # After 10 iterations, broadcast green base scored code with player info
+
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)
@@ -131,4 +127,19 @@ class PlayerUDP:
                 logging.info("End code 221 sent.")
         except Exception as e:
             logging.error("Failed to send end code 221:", e)
+
+    def broadcast_base_scored_info(self, code, player_name):
+        # Broadcast base scored code with player info
+        try:
+            if code == GREEN_BASE_SCORED_CODE:
+                message = f"Base scored code {code} and player {player_name} successfully broadcasted."
+            elif code == RED_BASE_SCORED_CODE:
+                message = f"Base scored code {code} and player {player_name} successfully broadcasted."
+            else:
+                logging.error("Invalid base scored code.")
+                return
+            self.broadcast_socket.sendto(message.encode(), ('<broadcast>', RECEIVE_PORT))
+            logging.info(message)
+        except Exception as e:
+            logging.error(f"Failed to broadcast base scored code {code} and player {player_name}: {e}")
 
