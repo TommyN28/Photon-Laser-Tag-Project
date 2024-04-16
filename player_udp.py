@@ -93,12 +93,11 @@ class PlayerUDP:
 
                 # Construct message
                 if random.randint(1, 2) == 1:
-                    message = f"{red_player_name} (E ID: {red_equipment_id}) Tag {green_player_name} (E ID: {green_equipment_id})"
+                    message = f"E ID: {red_equipment_id} Tag E ID: {green_equipment_id}"
                 else:
-                    message = f"{green_player_name} (E ID: {green_equipment_id}) Tag {red_player_name} (E ID: {red_equipment_id})"
+                    message = f"E ID: {green_equipment_id} Tag E ID: {red_equipment_id}"
 
                 # After 10 iterations, broadcast green base scored code with player info
-
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)

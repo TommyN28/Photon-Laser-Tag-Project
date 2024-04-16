@@ -16,6 +16,7 @@ class playAction:
         self.player_scores = {player_info['name']: 0 for player_info in green_players.values()}
         self.player_scores.update({player_info['name']: 0 for player_info in red_players.values()})
         self.label_names = {}
+        self.player_frames = {}  # Dictionary to store player frames
         # Initialize game duration and countdown variables
         self.game_duration = timedelta(minutes=6)
         self.countdown_duration = timedelta(seconds=3)
@@ -33,6 +34,8 @@ class playAction:
         self.green_frame = Frame(self.root, bg="black", bd=1)
         self.green_frame.pack(fill=BOTH, expand=True)
         Label(self.green_frame, fg="green yellow", bg="black", text="ALPHA GREEN", font=("Helvetica", 16, "bold")).pack(pady=5)
+        self.green_total_score_label = Label(self.green_frame, fg="green yellow", bg="black", text="Total Score: 0", font=("Helvetica", 12, "bold"))
+        self.green_total_score_label.pack(pady=5)
 
         # Display green team names
         for player_info in green_players.values():
@@ -43,11 +46,14 @@ class playAction:
             player_score_label = Label(player_frame, fg="green yellow", bg="black", text="0", font=("Helvetica", 12, "bold"))
             player_score_label.pack(side=RIGHT)
             self.label_names[player_info['name']] = player_score_label  # Store the label widget
+            self.player_frames[player_info['name']] = player_frame  # Store the player frame
 
         # Set up red team player list
         self.red_frame = Frame(self.root, bg="black", bd=1)
         self.red_frame.pack(fill=BOTH, expand=True)
         Label(self.red_frame, fg="red2", bg="black", text="ALPHA RED", font=("Helvetica", 16, "bold")).pack(pady=5)
+        self.red_total_score_label = Label(self.red_frame, fg="red2", bg="black", text="Total Score: 0", font=("Helvetica", 12, "bold"))
+        self.red_total_score_label.pack(pady=5)
 
         # Display red team names
         for player_info in red_players.values():
@@ -58,8 +64,9 @@ class playAction:
             player_score_label = Label(player_frame, fg="red2", bg="black", text="0", font=("Helvetica", 12, "bold"))
             player_score_label.pack(side=RIGHT)
             self.label_names[player_info['name']] = player_score_label
+            self.player_frames[player_info['name']] = player_frame
 
-            # Set up middle screen
+        # Set up middle screen
         self.middle_screen = Frame(self.root, bg="gray25", bd=1)
         self.middle_screen.pack(fill=BOTH, expand=True)
 
@@ -125,28 +132,77 @@ class playAction:
         # Start the traffic generator
         self.player_udp.start_traffic_generator(self.green_players, self.red_players, self.update_scrollable_screen)
 
-
     def update_scrollable_screen(self, received_data):
-        # Update the scrollable screen with the received data and update scores
-        self.play_by_play_text.insert(END, received_data + '\n')
-
+        # Extract equipment IDs from the received data
         interaction = received_data.split(" Tag ")
+        tagging_equipment_id = interaction[0].split("E ID: ")[1].split(" ")[0]
+        tagged_equipment_id = interaction[1].split("E ID: ")[1].split(" ")[0]
 
-        # Extract player names
-        tagging_player = interaction[0].split(" (")[0]
-        tagged_player = interaction[1].split(" (")[0]
+        # Find player names using equipment IDs
+        tagging_player_name = None
+        tagged_player_name = None
+
+        for player_info in self.green_players.values():
+            if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
+                tagging_player_name = player_info['name']
+            elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
+                tagged_player_name = player_info['name']
+
+        for player_info in self.red_players.values():
+            if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
+                tagging_player_name = player_info['name']
+            elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
+                tagged_player_name = player_info['name']
+
+        if tagging_player_name is None or tagged_player_name is None:
+            print("Error: Unable to find player names for the given equipment IDs.")
+            return
+
+        # Update the play-by-play text with player names
+        self.play_by_play_text.insert(END, f"{tagging_player_name} Tag {tagged_player_name}\n")
 
         # Check if players are from the same team
-        is_same_team = (tagging_player in self.green_players and tagged_player in self.green_players) \
-                       or (tagging_player in self.red_players and tagged_player in self.red_players)
+        is_same_team = (tagging_player_name in self.green_players and tagged_player_name in self.green_players) \
+                       or (tagging_player_name in self.red_players and tagged_player_name in self.red_players)
 
-        # Update scores based on team affiliation
-        if is_same_team:
-            self.player_scores[tagging_player] -= 10
-        else:
-            self.player_scores[tagging_player] += 10
+        print("Is Same Team:", is_same_team)
 
-        # Update GUI to display updated scores
-        for player, score in self.player_scores.items():
-            self.label_names[player].config(text=f"{score}")
+        # Update scores for tagging player on the green team
+        for player_info in self.green_players.values():
+            if player_info['name'] == tagging_player_name:
+                if is_same_team:
+                    player_info['equipment_id']['score'] -= 10
+                else:
+                    player_info['equipment_id']['score'] += 10
+                # Update player score in self.player_scores
+                self.player_scores[player_info['name']] = player_info['equipment_id']['score']
 
+        # Update scores for tagging player on the red team
+        for player_info in self.red_players.values():
+            if player_info['name'] == tagging_player_name:
+                if is_same_team:
+                    player_info['equipment_id']['score'] -= 10
+                else:
+                    player_info['equipment_id']['score'] += 10
+                # Update player score in self.player_scores
+                self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+
+        # Recalculate total scores for both green and red teams
+        green_total_score = sum(player_info['equipment_id']['score'] for player_info in self.green_players.values())
+        red_total_score = sum(player_info['equipment_id']['score'] for player_info in self.red_players.values())
+
+        # Update the text of the total score labels for both teams
+        self.green_total_score_label.config(text=f"Total Score: {green_total_score}")
+        self.red_total_score_label.config(text=f"Total Score: {red_total_score}")
+
+        # Update GUI to display updated scores and rearrange player rows
+        for i, (player, score) in enumerate(sorted(self.player_scores.items(), key=lambda x: x[1], reverse=True)):
+            # Update player score label
+            if player in self.label_names:
+                self.label_names[player].config(text=f"{score}")
+
+            # Retrieve player frame and move it to new position
+            if player in self.player_frames:
+                player_frame = self.player_frames[player]
+                player_frame.pack_forget()  # Remove from previous position
+                player_frame.pack(side=TOP, anchor=W)  # Place in new position

@@ -97,7 +97,7 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 3
+        self.time_remaining = 1
 
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
@@ -126,9 +126,6 @@ class PlayerEntry:
                 self.add_existing_player_button.config(state=tk.NORMAL)
                 # Set the game status to indicate that the game is not active
                 self.game_active = False
-
-
-
 
         label = tk.Label(self.window, text=self.time_remaining, bg='grey', fg='yellow', font=("Helvetica", 14))
         label.grid(row=3, column=3, columnspan=4, padx=10, pady=(0, 10))
