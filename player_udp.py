@@ -98,6 +98,11 @@ class PlayerUDP:
                     message = f"E ID: {green_equipment_id} Tag E ID: {red_equipment_id}"
 
                 # After 10 iterations, broadcast green base scored code with player info
+                if counter == 10:
+                    message = f"Base scored code: {GREEN_BASE_SCORED_CODE} and player E ID: {red_equipment_id}"
+
+                if counter == 20:
+                    message = f"Base scored code: {RED_BASE_SCORED_CODE} and player E ID: {green_equipment_id}"
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)
@@ -126,19 +131,4 @@ class PlayerUDP:
                 logging.info("End code 221 sent.")
         except Exception as e:
             logging.error("Failed to send end code 221:", e)
-
-    def broadcast_base_scored_info(self, code, player_name):
-        # Broadcast base scored code with player info
-        try:
-            if code == GREEN_BASE_SCORED_CODE:
-                message = f"Base scored code {code} and player {player_name} successfully broadcasted."
-            elif code == RED_BASE_SCORED_CODE:
-                message = f"Base scored code {code} and player {player_name} successfully broadcasted."
-            else:
-                logging.error("Invalid base scored code.")
-                return
-            self.broadcast_socket.sendto(message.encode(), ('<broadcast>', RECEIVE_PORT))
-            logging.info(message)
-        except Exception as e:
-            logging.error(f"Failed to broadcast base scored code {code} and player {player_name}: {e}")
 
