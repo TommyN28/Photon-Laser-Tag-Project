@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from player_udp import PlayerUDP
 import sys
 
+GREEN_BASE_SCORED_CODE: int = 43
+RED_BASE_SCORED_CODE: int = 53
+
 class playAction:
     def __init__(self, green_players, red_players):
         # Set up blank screen (using width/height variables for easy access)
@@ -133,76 +136,155 @@ class playAction:
         self.player_udp.start_traffic_generator(self.green_players, self.red_players, self.update_scrollable_screen)
 
     def update_scrollable_screen(self, received_data):
-        # Extract equipment IDs from the received data
-        interaction = received_data.split(" Tag ")
-        tagging_equipment_id = interaction[0].split("E ID: ")[1].split(" ")[0]
-        tagged_equipment_id = interaction[1].split("E ID: ")[1].split(" ")[0]
+        if received_data.startswith("Base scored code:"):
+            # Parse the received data to extract base code and player information
+            base_code = int(received_data.split()[3])
+            player_info = received_data.split(" and player ")[1].strip()
 
-        # Find player names using equipment IDs
-        tagging_player_name = None
-        tagged_player_name = None
+            # Extract equipment ID from player information
+            equipment_id = player_info.split(": ")[1]  # Assuming the equipment ID follows "E ID: " in the message
 
-        for player_info in self.green_players.values():
-            if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
-                tagging_player_name = player_info['name']
-            elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
-                tagged_player_name = player_info['name']
-
-        for player_info in self.red_players.values():
-            if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
-                tagging_player_name = player_info['name']
-            elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
-                tagged_player_name = player_info['name']
-
-        if tagging_player_name is None or tagged_player_name is None:
-            print("Error: Unable to find player names for the given equipment IDs.")
-            return
-
-        # Update the play-by-play text with player names
-        self.play_by_play_text.insert(END, f"{tagging_player_name} Tag {tagged_player_name}\n")
-
-        # Check if players are from the same team
-        is_same_team = (tagging_player_name in self.green_players and tagged_player_name in self.green_players) \
-                       or (tagging_player_name in self.red_players and tagged_player_name in self.red_players)
-
-        print("Is Same Team:", is_same_team)
-
-        # Update scores for tagging player on the green team
-        for player_info in self.green_players.values():
-            if player_info['name'] == tagging_player_name:
-                if is_same_team:
-                    player_info['equipment_id']['score'] -= 10
+            # Check if the base code matches the green base scored code
+            if base_code == GREEN_BASE_SCORED_CODE:
+                # Search for the player with the matching equipment ID in the green_players dictionary
+                player_name = None
+                for player_info in self.green_players.values():
+                    if player_info['equipment_id']['equipment_id'] == equipment_id:
+                        player_name = player_info['name']
+                        break
+                if player_name is not None:
+                    # Player found, update their score and display message
+                    player_info['equipment_id']['score'] += 100
+                    self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+                    self.play_by_play_text.insert(END, f"{player_name} has scored the green base\n")
+                    self.apply_style_B(player_name)
                 else:
-                    player_info['equipment_id']['score'] += 10
-                # Update player score in self.player_scores
-                self.player_scores[player_info['name']] = player_info['equipment_id']['score']
-
-        # Update scores for tagging player on the red team
-        for player_info in self.red_players.values():
-            if player_info['name'] == tagging_player_name:
-                if is_same_team:
-                    player_info['equipment_id']['score'] -= 10
+                    print("Player not found with equipment ID:", equipment_id)
+            elif base_code == RED_BASE_SCORED_CODE:
+                 # Search for the player with the matching equipment ID in the red_players dictionary
+                player_name = None
+                for player_info in self.red_players.values():
+                    if player_info['equipment_id']['equipment_id'] == equipment_id:
+                        player_name = player_info['name']
+                        break
+                if player_name is not None:
+                    # Player found, update their score and display message
+                    player_info['equipment_id']['score'] += 100
+                    self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+                    self.play_by_play_text.insert(END, f"{player_name} has scored the red base\n")
+                    self.apply_style_B(player_name)
                 else:
-                    player_info['equipment_id']['score'] += 10
-                # Update player score in self.player_scores
-                self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+                    print("Player not found with equipment ID:", equipment_id)
+        else:
+            # Extract equipment IDs from the received data
+            interaction = received_data.split(" Tag ")
+            tagging_equipment_id = interaction[0].split("E ID: ")[1].split(" ")[0]
+            tagged_equipment_id = interaction[1].split("E ID: ")[1].split(" ")[0]
 
-        # Recalculate total scores for both green and red teams
-        green_total_score = sum(player_info['equipment_id']['score'] for player_info in self.green_players.values())
-        red_total_score = sum(player_info['equipment_id']['score'] for player_info in self.red_players.values())
+            # Find player names using equipment IDs
+            tagging_player_name = None
+            tagged_player_name = None
 
-        # Update the text of the total score labels for both teams
-        self.green_total_score_label.config(text=f"Total Score: {green_total_score}")
-        self.red_total_score_label.config(text=f"Total Score: {red_total_score}")
+            for player_info in self.green_players.values():
+                if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
+                    tagging_player_name = player_info['name']
+                elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
+                    tagged_player_name = player_info['name']
 
-        # Update GUI to display updated scores and rearrange player rows
-        for i, (player, score) in enumerate(sorted(self.player_scores.items(), key=lambda x: x[1], reverse=True)):
-            # Update player score label
-            if player in self.label_names:
-                self.label_names[player].config(text=f"{score}")
+            for player_info in self.red_players.values():
+                if player_info['equipment_id']['equipment_id'] == tagging_equipment_id:
+                    tagging_player_name = player_info['name']
+                elif player_info['equipment_id']['equipment_id'] == tagged_equipment_id:
+                    tagged_player_name = player_info['name']
 
-            # Retrieve player frame and move it to new position
-            if player in self.player_frames:
-                player_frame = self.player_frames[player]
-                player_frame.pack_forget()  # Remove from previous position
-                player_frame.pack(side=TOP, anchor=W)  # Place in new position
+            if tagging_player_name is None or tagged_player_name is None:
+                print("Error: Unable to find player names for the given equipment IDs.")
+                return
+
+            # Update the play-by-play text with player names
+            self.play_by_play_text.insert(END, f"{tagging_player_name} Tag {tagged_player_name}\n")
+
+            # Check if players are from the same team
+            is_same_team = (tagging_player_name in self.green_players and tagged_player_name in self.green_players) \
+                           or (tagging_player_name in self.red_players and tagged_player_name in self.red_players)
+
+            # Update scores for tagging player on the green team
+            for player_info in self.green_players.values():
+                if player_info['name'] == tagging_player_name:
+                    if is_same_team:
+                        player_info['equipment_id']['score'] -= 10
+                    else:
+                        player_info['equipment_id']['score'] += 10
+                    # Update player score in self.player_scores
+                    self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+
+            # Update scores for tagging player on the red team
+            for player_info in self.red_players.values():
+                if player_info['name'] == tagging_player_name:
+                    if is_same_team:
+                        player_info['equipment_id']['score'] -= 10
+                    else:
+                        player_info['equipment_id']['score'] += 10
+                    # Update player score in self.player_scores
+                    self.player_scores[player_info['name']] = player_info['equipment_id']['score']
+
+            # Recalculate total scores for both green and red teams
+            green_total_score = sum(player_info['equipment_id']['score'] for player_info in self.green_players.values())
+            red_total_score = sum(player_info['equipment_id']['score'] for player_info in self.red_players.values())
+
+            # Update the text of the total score labels for both teams
+            self.green_total_score_label.config(text=f"Total Score: {green_total_score}")
+            self.red_total_score_label.config(text=f"Total Score: {red_total_score}")
+
+            # Compare total scores to determine which team's label should flash
+            if green_total_score > red_total_score:
+                self.flash_label(self.green_total_score_label)
+                self.stop_flash_label(self.red_total_score_label)
+            elif green_total_score < red_total_score:
+                self.flash_label(self.red_total_score_label)
+                self.stop_flash_label(self.green_total_score_label)
+            else:
+                # If scores are equal, stop flashing both labels
+                self.stop_flash_label(self.green_total_score_label)
+                self.stop_flash_label(self.red_total_score_label)
+
+            # Update GUI to display updated scores and rearrange player rows
+            for i, (player, score) in enumerate(sorted(self.player_scores.items(), key=lambda x: x[1], reverse=True)):
+                # Update player score label
+                if player in self.label_names:
+                    self.label_names[player].config(text=f"{score}")
+
+                # Retrieve player frame and move it to new position
+                if player in self.player_frames:
+                    player_frame = self.player_frames[player]
+                    player_frame.pack_forget()  # Remove from previous position
+                    player_frame.pack(side=TOP, anchor=W)  # Place in new position
+    def flash_label(self, label):
+        # Toggle the label's background color between two colors
+        if hasattr(self, "flash_timer"):
+            # If a flash timer is already running, stop it first
+            self.root.after_cancel(self.flash_timer)
+
+        def toggle_color():
+            if label.cget("bg") == "black":
+                label.configure(bg="yellow")
+            else:
+                label.configure(bg="black")
+            self.flash_timer = self.root.after(200, toggle_color)  # Flashing interval: 500 milliseconds
+
+        toggle_color()
+
+    def stop_flash_label(self, label):
+        # Stop flashing the label and reset its background color
+        if hasattr(self, "flash_timer"):
+            self.root.after_cancel(self.flash_timer)
+        label.configure(bg="black")  # Reset background color to black
+
+    def apply_style_B(self, player_name):
+        # Change the appearance of the player's label to indicate they hit the base
+        if player_name in self.label_names:
+            # Add a stylized "B" to the left of the player's name
+            current_text = self.label_names[player_name].cget("text")
+            self.label_names[player_name].config(text= current_text + " B" )
+            # Change background and foreground color if needed
+            self.label_names[player_name].config(bg="blue", fg="white")
