@@ -110,11 +110,18 @@ class PlayerEntry:
             pygame.mixer.music.load(filename)
             pygame.mixer.music.play()
 
+        def flashLabel():
+            label.config(bg = "yellow")
+        def resetLabel():
+            label.config(bg = "grey")
+
         # Define a function to update the label every second
         def update_label():
             if self.time_remaining >= 0:
                 label.config(text=self.time_remaining)
                 self.time_remaining -= 1
+                flashLabel()
+                self.window.after(500,resetLabel)
                 # Schedule the update again after 1 second
                 self.window.after(1000, update_label)
                 if self.time_remaining == 15:
