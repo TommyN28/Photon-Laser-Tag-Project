@@ -239,7 +239,8 @@ class PlayerEntry:
             'equipment_id': {
                 'id': player_id,
                 'equipment_id': equipment_id,
-                'score': 0
+                'score': 0,
+                'base_hit': False
             }
         }
 
@@ -271,7 +272,8 @@ class PlayerEntry:
             'equipment_id': {
                 'id': player_id,
                 'equipment_id': equipment_id,
-                'score': 0
+                'score': 0,
+                'base_hit': False
             }
         }
 

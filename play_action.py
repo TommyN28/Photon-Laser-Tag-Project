@@ -144,7 +144,7 @@ class playAction:
             # Extract equipment ID from player information
             equipment_id = player_info.split(": ")[1]  # Assuming the equipment ID follows "E ID: " in the message
 
-            # Check if the base code matches the green base scored code
+             # Check if the base code matches the green base scored code
             if base_code == GREEN_BASE_SCORED_CODE:
                 # Search for the player with the matching equipment ID in the green_players dictionary
                 player_name = None
@@ -155,13 +155,14 @@ class playAction:
                 if player_name is not None:
                     # Player found, update their score and display message
                     player_info['equipment_id']['score'] += 100
+                    player_info['equipment_id']['base_hit'] = True  # Set base_hit attribute to True
                     self.player_scores[player_info['name']] = player_info['equipment_id']['score']
                     self.play_by_play_text.insert(END, f"{player_name} has scored the green base\n")
                     self.apply_style_B(player_name)
                 else:
                     print("Player not found with equipment ID:", equipment_id)
             elif base_code == RED_BASE_SCORED_CODE:
-                 # Search for the player with the matching equipment ID in the red_players dictionary
+                # Search for the player with the matching equipment ID in the red_players dictionary
                 player_name = None
                 for player_info in self.red_players.values():
                     if player_info['equipment_id']['equipment_id'] == equipment_id:
@@ -170,11 +171,13 @@ class playAction:
                 if player_name is not None:
                     # Player found, update their score and display message
                     player_info['equipment_id']['score'] += 100
+                    player_info['equipment_id']['base_hit'] = True  # Set base_hit attribute to True
                     self.player_scores[player_info['name']] = player_info['equipment_id']['score']
                     self.play_by_play_text.insert(END, f"{player_name} has scored the red base\n")
                     self.apply_style_B(player_name)
                 else:
                     print("Player not found with equipment ID:", equipment_id)
+
         else:
             # Extract equipment IDs from the received data
             interaction = received_data.split(" Tag ")
@@ -249,16 +252,26 @@ class playAction:
                 self.stop_flash_label(self.red_total_score_label)
 
             # Update GUI to display updated scores and rearrange player rows
+            players_with_b = set()  # Maintain a set of players who have "B" appended
             for i, (player, score) in enumerate(sorted(self.player_scores.items(), key=lambda x: x[1], reverse=True)):
-                # Update player score label
+                 # Update player score label
                 if player in self.label_names:
                     self.label_names[player].config(text=f"{score}")
+                    # Check if the player has "B" appended and add them to the set
+                    if self.label_names[player].cget("text").endswith(" B"):
+                        players_with_b.add(player)
 
-                # Retrieve player frame and move it to new position
-                if player in self.player_frames:
-                    player_frame = self.player_frames[player]
-                    player_frame.pack_forget()  # Remove from previous position
-                    player_frame.pack(side=TOP, anchor=W)  # Place in new position
+                # Retrieve player frames and move them to new positions
+            for player in self.player_frames:
+                player_frame = self.player_frames[player]
+                player_frame.pack_forget()  # Remove from previous position
+                player_frame.pack(side=TOP, anchor=W)  # Place in new position
+
+            # Reapply "B" to players who had it before repacking
+            for player in players_with_b:
+                self.apply_style_B(player)
+
+
     def flash_label(self, label):
         # Toggle the label's background color between two colors
         if hasattr(self, "flash_timer"):
@@ -283,8 +296,19 @@ class playAction:
     def apply_style_B(self, player_name):
         # Change the appearance of the player's label to indicate they hit the base
         if player_name in self.label_names:
-            # Add a stylized "B" to the left of the player's name
-            current_text = self.label_names[player_name].cget("text")
-            self.label_names[player_name].config(text= current_text + " B" )
-            # Change background and foreground color if needed
-            self.label_names[player_name].config(bg="blue", fg="white")
+            # Check if the player has hit the base
+            base_hit = False
+            for player_info in self.green_players.values():
+                if player_info['name'] == player_name and player_info['equipment_id']['base_hit']:
+                    base_hit = True
+                    break
+
+            for player_info in self.red_players.values():
+                if player_info['name'] == player_name and player_info['equipment_id']['base_hit']:
+                    base_hit = True
+                    break
+
+            # Add a stylized "B" to the left of the player's name if they hit the base
+            if base_hit:
+                current_text = self.label_names[player_name].cget("text")
+                self.label_names[player_name].config(text=current_text + " B")

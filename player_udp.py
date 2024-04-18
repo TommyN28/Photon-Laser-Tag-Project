@@ -98,10 +98,10 @@ class PlayerUDP:
                     message = f"E ID: {green_equipment_id} Tag E ID: {red_equipment_id}"
 
                 # After 10 iterations, broadcast green base scored code with player info
-                if counter == 10:
+                if counter == 3:
                     message = f"Base scored code: {GREEN_BASE_SCORED_CODE} and player E ID: {red_equipment_id}"
 
-                if counter == 20:
+                if counter == 6:
                     message = f"Base scored code: {RED_BASE_SCORED_CODE} and player E ID: {green_equipment_id}"
 
                 # Transmit message to game software
