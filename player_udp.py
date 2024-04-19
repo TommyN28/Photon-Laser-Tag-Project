@@ -73,6 +73,8 @@ class PlayerUDP:
     def generate_traffic(self, red_players, green_players, callback):
         print("Starting traffic generation")
         counter = 0
+        players_who_hit_base = set()
+        first_iteration = True
         while True:
             try:
                 # Select random players
@@ -97,12 +99,16 @@ class PlayerUDP:
                 else:
                     message = f"E ID: {green_equipment_id} Tag E ID: {red_equipment_id}"
 
-                # After 10 iterations, broadcast green base scored code with player info
-                if counter == 3:
-                    message = f"Base scored code: {GREEN_BASE_SCORED_CODE} and player E ID: {red_equipment_id}"
-
-                if counter == 6:
-                    message = f"Base scored code: {RED_BASE_SCORED_CODE} and player E ID: {green_equipment_id}"
+                # After every 10 iterations, trigger player hit
+                if counter % 10 == 0 and not first_iteration:
+                    if counter % 20 == 0:  # Every 20th iteration, trigger red base hit
+                        if red_player_name not in players_who_hit_base:
+                            message = f"Base scored code: {RED_BASE_SCORED_CODE} and player E ID: {green_equipment_id}"
+                            players_who_hit_base.add(red_player_name)
+                    else:  # Otherwise, trigger green base hit
+                        if green_player_name not in players_who_hit_base:
+                            message = f"Base scored code: {GREEN_BASE_SCORED_CODE} and player E ID: {red_equipment_id}"
+                            players_who_hit_base.add(green_player_name)
 
                 # Transmit message to game software
                 self.broadcast_socket.sendto(message.encode(), CLIENT_ADDRESS_PORT)
@@ -114,6 +120,7 @@ class PlayerUDP:
                 callback(received_data)
 
                 counter += 1
+                first_iteration = False
                 if received_data == str(END_GAME_CODE):
                     break
                 time.sleep(random.randint(1, 3))
