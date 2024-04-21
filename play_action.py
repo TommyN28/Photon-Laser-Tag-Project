@@ -85,23 +85,32 @@ class playAction:
 
             self.base_hit_labels[player_info['name']] = base_hit_label
 
-            # Set up middle screen
+        # set up middle screen background
+        self.middle_bg = Frame(self.root, bg="gray25", bd=1)
+        self.middle_bg.pack(fill=BOTH, expand=True)
+
+        # Set up middle screen
         self.middle_screen = Frame(self.root, bg="gray25", bd=1)
         self.middle_screen.pack(fill=BOTH, expand=True)
 
         # Scrollable text area for play-by-play action
-        self.play_by_play_text = Text(self.middle_screen, fg="white", bg="gray25", font=("Helvetica", 12), wrap=WORD)
+        self.play_by_play_text = Text(self.middle_screen, fg="white", bg="gray15", font=("Helvetica", 12), wrap=WORD)
         self.play_by_play_text.pack(fill=BOTH, expand=True)
 
         # Place frames in their respective corners
         self.root.geometry("+0+0")
         self.green_frame.place(x=0, y=0, width=screen_width/2, height=screen_height/2)  # Top-left corner
         self.red_frame.place(x=screen_width - screen_width/2, y=0, width=screen_width/2, height=screen_height/2)  # Top-right corner
-        self.middle_screen.place(x=0, y=screen_height/2, width=screen_width, height=screen_height/2)  # Middle
+        self.middle_bg.place(x=0, y=screen_height/2, width=screen_width, height=screen_height/2)  # Middle
+        self.middle_screen.place(x=screen_width/3, y=screen_height/2, width=screen_width/3, height=screen_height/2.15)  # Middle
 
         # Set up timer label
-        self.timer_label = Label(self.middle_screen, fg="white", bg="gray25", text="", font=("Helvetica", 16, "bold"))
+        self.timer_label = Label(self.middle_bg, fg="white", bg="gray25", text="", font=("Helvetica", 16, "bold"))
         self.timer_label.pack(side=BOTTOM)
+
+        # set up return button
+        return_button = Button(self.middle_bg, text="Return to \n Player Entry Screen", command=self.return_button_pressed, bg="gray25", fg="white", font=("Helvetica", 12, "bold"), relief="raised", highlightbackground="black")
+        return_button.pack(side=LEFT, padx = screen_width/8)
 
         # Start updating the timer
         self.start_countdown()
@@ -349,9 +358,10 @@ class playAction:
         # Place the winner label at the bottom of the screen
         winner_label.place(relx=0.5, rely=0.9, anchor=CENTER)
 
-    def create_return_button(self):
+    def return_button_pressed(self):
         # Close the current window
         self.root.destroy()
 
-        # Show a message box to indicate returning to player_entry.py
-        messagebox.showinfo("Return", "Returning to Player Entry screen...")
+        from player_entry import PlayerEntry
+        player_entry = PlayerEntry()
+
