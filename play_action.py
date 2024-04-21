@@ -24,7 +24,7 @@ class playAction:
         self.player_frames = {}  # Dictionary to store player frames
         # Initialize game duration and countdown variables
         self.game_duration = timedelta(minutes=6)
-        self.countdown_duration = timedelta(seconds=3)
+        self.countdown_duration = timedelta(seconds=30)
         self.start_time = None
         self.end_time = None
 
@@ -178,7 +178,7 @@ class playAction:
                     player_info['equipment_id']['score'] += 100
                     player_info['equipment_id']['base_hit'] = True  # Set base_hit attribute to True
                     self.player_scores[player_info['name']] = player_info['equipment_id']['score']
-                    self.play_by_play_text.insert(END, f"{player_name} has scored the green base\n")
+                    self.play_by_play_text.insert(END, f"{player_name} has scored the red base\n")
 
                 else:
                     print("Player not found with equipment ID:", equipment_id)
@@ -194,7 +194,7 @@ class playAction:
                     player_info['equipment_id']['score'] += 100
                     player_info['equipment_id']['base_hit'] = True  # Set base_hit attribute to True
                     self.player_scores[player_info['name']] = player_info['equipment_id']['score']
-                    self.play_by_play_text.insert(END, f"{player_name} has scored the red base\n")
+                    self.play_by_play_text.insert(END, f"{player_name} has scored the green base\n")
 
                 else:
                     print("Player not found with equipment ID:", equipment_id)

@@ -97,7 +97,7 @@ class PlayerEntry:
         # Set the game status to indicate that the game is active
         self.game_active = True
 
-        self.time_remaining = 1
+        self.time_remaining = 30
 
         tk.Label(self.window, text="Time till game start: ", bg='grey', fg='yellow', font=("Helvetica", 14)).grid(row=2, column=3, columnspan=4, padx=10, pady=(0, 10))
 
@@ -381,6 +381,12 @@ class PlayerEntry:
         elif team == "Red" and len(self.red_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
             return
+
+        # Check if the equipment ID is empty
+        if not equipment_id:
+            messagebox.showerror("Error", "Please enter an equipment ID.")
+            return
+
         # Check if the equipment ID is already used
         if equipment_id in self.used_equipment_ids:
             messagebox.showerror("Error", "Equipment ID already in use. Please choose a different one.")
@@ -412,6 +418,11 @@ class PlayerEntry:
             return
         elif team == "Red" and len(self.red_players) >= 15:
             messagebox.showerror("Error", "Maximum number of players reached for the Red team.")
+            return
+
+        # Check if the equipment ID is empty
+        if not equipment_id:
+            messagebox.showerror("Error", "Please enter an equipment ID.")
             return
 
         # Check if the equipment ID is already used
