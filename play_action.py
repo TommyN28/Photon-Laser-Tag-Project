@@ -2,7 +2,7 @@ from tkinter import *
 from datetime import datetime, timedelta
 from player_udp import PlayerUDP
 import sys
-from tkinter import messagebox
+
 
 GREEN_BASE_SCORED_CODE: int = 43
 RED_BASE_SCORED_CODE: int = 53
@@ -12,9 +12,9 @@ class playAction:
         # Set up blank screen (using width/height variables for easy access)
         self.root = Tk()
         self.root.title("Play Action")
-        screen_width = 1200
+        self.screen_width = 1200
         screen_height = 900
-        self.root.geometry(str(screen_width) + "x" + str(screen_height))
+        self.root.geometry(str(self.screen_width) + "x" + str(screen_height))
         self.player_udp = PlayerUDP()
         self.root.protocol("WM_DELETE_WINDOW", self.on_window_close)
         self.player_scores = {player_info['name']: 0 for player_info in green_players.values()}
@@ -27,7 +27,6 @@ class playAction:
         self.countdown_duration = timedelta(seconds=30)
         self.start_time = None
         self.end_time = None
-
         self.green_players = green_players or {}
         self.red_players = red_players or {}
 
@@ -99,18 +98,19 @@ class playAction:
 
         # Place frames in their respective corners
         self.root.geometry("+0+0")
-        self.green_frame.place(x=0, y=0, width=screen_width/2, height=screen_height/2)  # Top-left corner
-        self.red_frame.place(x=screen_width - screen_width/2, y=0, width=screen_width/2, height=screen_height/2)  # Top-right corner
-        self.middle_bg.place(x=0, y=screen_height/2, width=screen_width, height=screen_height/2)  # Middle
-        self.middle_screen.place(x=screen_width/3, y=screen_height/2, width=screen_width/3, height=screen_height/2.15)  # Middle
+        self.green_frame.place(x=0, y=0, width=self.screen_width/2, height=screen_height/2)  # Top-left corner
+        self.red_frame.place(x=self.screen_width - self.screen_width/2, y=0, width=self.screen_width/2, height=screen_height/2)  # Top-right corner
+        self.middle_bg.place(x=0, y=screen_height/2, width=self.screen_width, height=screen_height/2)  # Middle
+        self.middle_screen.place(x=self.screen_width/3, y=screen_height/2, width=self.screen_width/3, height=screen_height/2.15)  # Middle
 
         # Set up timer label
         self.timer_label = Label(self.middle_bg, fg="white", bg="gray25", text="", font=("Helvetica", 16, "bold"))
         self.timer_label.pack(side=BOTTOM)
 
         # set up return button
-        return_button = Button(self.middle_bg, text="Return to \n Player Entry Screen", command=self.return_button_pressed, bg="gray25", fg="white", font=("Helvetica", 12, "bold"), relief="raised", highlightbackground="black")
-        return_button.pack(side=LEFT, padx = screen_width/8)
+        self.return_button = Button(self.middle_bg, text="Return to \n Player Entry Screen", command=self.return_button_pressed, bg="gray25", fg="white", font=("Helvetica", 12, "bold"), relief="raised", highlightbackground="black")
+        self.return_button.pack(side=LEFT, padx=self.screen_width/8)
+        self.hide_return_button()
 
         # Start updating the timer
         self.start_countdown()
@@ -155,11 +155,18 @@ class playAction:
             # Send end code when the game is over
             self.player_udp.send_end_code()
             self.display_winner()
-            self.create_return_button()
-
+            self.game_ended = True
+            # Show the return button
+            self.show_return_button()
         else:
             self.timer_label.config(text="Time remaining: " + str(remaining_time)[2:7])  # Format as mm:ss
             self.timer_label.after(1000, self.update_game_timer)
+
+    def hide_return_button(self):
+        self.return_button.pack_forget()
+
+    def show_return_button(self):
+        self.return_button.pack(side=LEFT, padx=self.screen_width/8)
 
     def start_traffic_generator(self):
         # Start the traffic generator
@@ -359,9 +366,7 @@ class playAction:
         winner_label.place(relx=0.5, rely=0.9, anchor=CENTER)
 
     def return_button_pressed(self):
-        # Close the current window
+        # Close the current window and return to player entry screen
         self.root.destroy()
-
         from player_entry import PlayerEntry
         player_entry = PlayerEntry()
-
