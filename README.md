@@ -26,7 +26,7 @@ The main file for this project is called main.py, and it needs to be run using p
 
 --sudo apt-get install python3-tk
 
---sudo apt-get install python3-pil python3-pil.imagetk
+$--sudo apt-get install python3-pil python3-pil.imagetk
 
 Then the user, using the command python3 main.py, should execute the code.
 
