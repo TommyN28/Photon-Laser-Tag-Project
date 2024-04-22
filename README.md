@@ -26,7 +26,7 @@ The main file for this project is called main.py, and it needs to be run using p
 
 --sudo apt-get install python3-tk
 
-$--sudo apt-get install python3-pil python3-pil.imagetk
+--sudo apt-get install python3-pil python3-pil.imagetk
 
 Then the user, using the command python3 main.py, should execute the code.
 
@@ -41,4 +41,4 @@ That information will then be displayed on the list of players within the specif
 
 Upon running the program, the user is presented with a display of the empty list of players for both teams. The user can enter a new player into each team by providing a username, a player ID, and an equipment ID. The game requires there to be at least one player on each team otherwise it will not start. There also cannot be duplicate player IDs or equipment IDs. A maximum of 15 players per team is allowed. The list of players can also be reset if the user presses the F12 key. When the user is ready to begin the game, they can press F5 to begin the game's countdown timer. During this time, no action can be performed on the player entry screen. Once the countdown timer is complete, the player entry screen is replaced with the player action screen.
 
-In future versions, the player action screen will display the list of players and their score, as well as a running log of player actions against one another.
+The play-action screen consist of displaying a countdown timer before the game starts which consist of 30 seconds. After this timer ends the traffic generator from the playerUDP file is called and starts creating random actions between the players in each team, whenever a message, player in green has hit player in red or vice versa generates, points are added to the hitting player and the score as well as will position the player with most points on top of their respective list, every 10 iterations and every 20, code 43 and code 53 will be sent accordingly which will grab a random player from the list and add a B as well as 100 points to that player
